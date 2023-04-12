@@ -24,7 +24,6 @@ Replace `VERSION HERE` with the latest version.
 ## Usage
 To create a new `RJA` Instance, you can use the `RJABuilder`.
 
-    ```java
 ```
 RJABuilder builder = new RJABuilder("token"); // Replace "token" with your bot token
 // do some stuff
