@@ -2,19 +2,19 @@ package de.joshicodes.rja;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.cache.Cache;
-import de.joshicodes.rja.exception.DisabledCacheException;
 import de.joshicodes.rja.object.Message;
 import de.joshicodes.rja.object.User;
+import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.rest.FetchUserRequest;
+import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.self.FetchSelfRequest;
 import de.joshicodes.rja.rest.EditSelfRestAction;
 import de.joshicodes.rja.rest.RestAction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 /**
@@ -30,15 +30,22 @@ import java.util.logging.Logger;
 public abstract class RJA {
 
     private final Cache<User> userCache;
-    private final List<Message> messageCache;
+    private final Cache<Message> messageCache;
+    private final Cache<GenericChannel> channelCache;
 
     RJA(List<CachingPolicy> cachingPolicies) {
 
         if(cachingPolicies.contains(CachingPolicy.MEMBER)) userCache = new Cache<>();
         else userCache = null;
 
-        if(cachingPolicies.contains(CachingPolicy.MESSAGE)) messageCache = new ArrayList<>();
+        if(cachingPolicies.contains(CachingPolicy.MESSAGE)) messageCache = new Cache<>();
         else messageCache = null;
+
+        if(cachingPolicies.contains(CachingPolicy.SERVER)) {
+            channelCache = new Cache<>();
+        } else {
+            channelCache = null;
+        }
 
     }
 
@@ -99,6 +106,23 @@ public abstract class RJA {
         };
     }
 
+    public RestAction<GenericChannel> retrieveChannel(String id) {
+        final RJA rja = this;
+        return new RestAction<>(this) {
+            @Override
+            public GenericChannel complete() {
+                if(channelCache != null) {
+                    // Caching for Channel is enabled
+                    GenericChannel c = channelCache.stream().filter(channel -> channel.getId().equals(id)).findFirst().orElse(null);
+                    if(c != null) return c;
+                }
+                // Caching is disabled or channel is not found in cache
+                FetchChannelRequest request = new FetchChannelRequest(id);
+                return getRequestHandler().sendRequest(rja, request);
+            }
+        };
+    }
+
     public void cacheMessage(Message message) {
         if(messageCache == null) return;
         messageCache.add(message);
@@ -115,6 +139,18 @@ public abstract class RJA {
         }
     }
 
+    public GenericChannel cacheChannel(JsonObject channel) {
+        GenericChannel c = GenericChannel.from(this, channel);
+        if(channelCache == null) return c;
+        if(c != null) {
+            channelCache.add(c);
+            //getLogger().info("Loaded channel " + c.getName()); // DEBUG
+        } else {
+            getLogger().warning("Failed to load channel!");
+        }
+        return c;
+    }
+
     /**
      * Retrieves the User cache.
      * @return The user cache or null if the caching policy for {@link CachingPolicy#MEMBER} is disabled.
@@ -127,12 +163,20 @@ public abstract class RJA {
      * Retrieves the Message cache.
      * @return The message cache or null if the caching policy for {@link CachingPolicy#MESSAGE} is disabled.
      */
-    public List<Message> getMessageCache() {
+    public Cache<Message> getMessageCache() {
         return messageCache;
     }
 
-    public RestAction<User> getSelfUser() {
-        return new RestAction<User>(this) {
+    /**
+     * Retrieves the Channel cache.
+     * @return The channel cache or null if the caching policy for {@link CachingPolicy#SERVER} is disabled.
+     */
+    public Cache<GenericChannel> getChannelCache() {
+        return channelCache;
+    }
+
+    public RestAction<User> retrieveSelfUser() {
+        return new RestAction<>(this) {
             @Override
             public User complete() {
                 FetchSelfRequest request = new FetchSelfRequest();
