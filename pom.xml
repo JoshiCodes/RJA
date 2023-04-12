@@ -6,10 +6,12 @@
 
     <groupId>de.joshicodes</groupId>
     <artifactId>RJA</artifactId>
-    <version>1.0</version>
+    <version>1.0-alpha.2</version>
+
     <description>
         RJA is a Java Library for the Revolt API.
     </description>
+
     <developers>
         <developer>
             <!-- Discord: Joroshi#7727 - Revolt: @Joroshi -->
