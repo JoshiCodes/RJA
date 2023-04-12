@@ -1,17 +1,19 @@
-package de.joshicodes.rja.requests;
+package de.joshicodes.rja.requests.packet;
+
+import de.joshicodes.rja.requests.rest.RestRequest;
 
 import java.util.HashMap;
 
 /**
  * Represents a request sent to the Revolt API.
+ * Usually used to send a request through the WebSocket Connection.
+ * To send HTTP requests, use {@link RestRequest}.
  */
-public abstract class Request {
+public abstract class PacketRequest {
 
     private final HashMap<String, Object> data;
-    private boolean doAuthentication = true;
 
-
-    Request(String type) {
+    public PacketRequest(String type) {
         this.data = new HashMap<>();
         this.data.put("type", type);
     }
@@ -24,16 +26,8 @@ public abstract class Request {
         this.data.put(key, value);
     }
 
-    public void doAuthentication(boolean doAuthentication) {
-        this.doAuthentication = doAuthentication;
-    }
-
     public HashMap<String, Object> getData() {
         return data;
-    }
-
-    public boolean doAuthentication() {
-        return doAuthentication;
     }
 
 }

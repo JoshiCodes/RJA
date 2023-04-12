@@ -10,7 +10,11 @@ import de.joshicodes.rja.event.Event;
 import de.joshicodes.rja.event.EventHandler;
 import de.joshicodes.rja.event.EventListener;
 import de.joshicodes.rja.event.IncomingEvent;
-import de.joshicodes.rja.event.self.ReadyEvent;
+import de.joshicodes.rja.requests.packet.PacketRequest;
+import de.joshicodes.rja.requests.packet.PingRequest;
+import de.joshicodes.rja.requests.rest.RestRequest;
+import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.util.HttpUtil;
 import de.joshicodes.rja.util.JsonUtil;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -21,7 +25,6 @@ import java.lang.reflect.Parameter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.logging.Logger;
 
 public class RequestHandler extends WebSocketClient {
 
@@ -56,7 +59,27 @@ public class RequestHandler extends WebSocketClient {
         timerThread.start();
     }
 
-    public void sendRequest(Request request) {
+    /**
+     * Sends a request to the API and returns the result.
+     * This method can block the current thread and should be called in a {@link RestAction}.
+     * @param rja  The RJA instance
+     * @param request The request to send
+     * @return The result of the request
+     * @param <T> The type of the result
+     */
+    public <T> T sendRequest(final RJA rja, RestRequest<T> request) {
+        final RJABuilder builder = this.rja;
+        JsonElement e = builder.makeRequest(request);
+        if(e == null) {
+            return null;
+        }
+        if(!e.isJsonObject()) {
+            return null;
+        }
+        return request.fetch(rja, e.getAsJsonObject());
+    }
+
+    public void sendRequest(PacketRequest request) {
         JsonObject jsonObject = new JsonObject();
         HashMap<String, Object> data = request.getData();
         for(String key : data.keySet()) {

@@ -1,6 +1,7 @@
 package de.joshicodes.rja.object;
 
 import com.google.gson.JsonObject;
+import de.joshicodes.rja.util.JsonUtil;
 
 public abstract class UserStatus {
 
@@ -10,8 +11,8 @@ public abstract class UserStatus {
     public static UserStatus from(JsonObject object) {
         if(object == null) return null;
 
-        final String text = object.get("text").getAsString();
-        final Presence presence = Presence.fromString(object.get("presence").getAsString());
+        final String text = JsonUtil.getString(object, "text", null);
+        final Presence presence = Presence.fromString(JsonUtil.getString(object, "presence", null), Presence.ONLINE);
 
         return new UserStatus() {
             @Override
@@ -38,9 +39,11 @@ public abstract class UserStatus {
         }
 
         public static Presence fromString(String presence, Presence def) {
-            for(Presence p : values()) {
-                if(p.name().equalsIgnoreCase(presence)) {
-                    return p;
+            if(presence != null) {
+                for(Presence p : values()) {
+                    if(p.name().equalsIgnoreCase(presence)) {
+                        return p;
+                    }
                 }
             }
             return def;

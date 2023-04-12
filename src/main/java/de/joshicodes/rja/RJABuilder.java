@@ -1,15 +1,19 @@
 package de.joshicodes.rja;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.event.EventListener;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.event.message.MessageReceivedEvent;
 import de.joshicodes.rja.event.self.ReadyEvent;
+import de.joshicodes.rja.object.UserStatus;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
+import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.util.HttpUtil;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +37,9 @@ public class RJABuilder {
     private List<IncomingEvent> events;
 
     private List<CachingPolicy> cachingPolicies;
+
+    private UserStatus status;
+    private boolean cleanStatus = true;
 
     /**
      * Creates a new RJABuilder instance with the given token.
@@ -139,7 +146,30 @@ public class RJABuilder {
         return this;
     }
 
+    public RJABuilder setStatus(final String text, final UserStatus.Presence presence) {
+        this.status = new UserStatus() {
+            @Override
+            public String text() {
+                return text;
+            }
 
+            @Override
+            public Presence presence() {
+                return presence;
+            }
+        };
+        return this;
+    }
+
+    public RJABuilder setStatus(UserStatus status) {
+        this.status = status;
+        return this;
+    }
+
+    public RJABuilder doCleanStatus(boolean cleanStatus) {
+        this.cleanStatus = cleanStatus;
+        return this;
+    }
 
     /**
      * Gets the built RJA instance.
@@ -193,12 +223,37 @@ public class RJABuilder {
 
         };
 
-        new Thread(requestHandler::connect).start();
+        new Thread() {
+            @Override
+            public void run() {
+                requestHandler.connect();
+                if(cleanStatus && status == null) {
+                    rja.editSelfUser().setStatus("", UserStatus.Presence.ONLINE).queue();
+                    rja.editSelfUser().remove("StatusText", "StatusPresence").queue();
+                } else if(status != null) {
+                    rja.editSelfUser().setStatus(status.text(), status.presence()).queue();
+                }
+            }
+        }.start();
 
         build = rja;
 
         return rja;
 
+    }
+
+    public <T> JsonElement makeRequest(RestRequest<T> request) {
+        try {
+            return HttpUtil.sendRequest(
+                    apiUrl + request.getEndpoint(),
+                    request.getMethod(),
+                    HttpUtil.AUTH_HEADER_BOT,
+                    token,
+                    request.getJsonData()
+            );
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

@@ -7,6 +7,9 @@ import de.joshicodes.rja.object.Message;
 import de.joshicodes.rja.object.User;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
+import de.joshicodes.rja.requests.rest.FetchUserRequest;
+import de.joshicodes.rja.requests.rest.self.FetchSelfRequest;
+import de.joshicodes.rja.rest.EditSelfRestAction;
 import de.joshicodes.rja.rest.RestAction;
 
 import java.util.ArrayList;
@@ -26,13 +29,12 @@ import java.util.logging.Logger;
  */
 public abstract class RJA {
 
-    //private final Cache<User> userCache;  // Not used, since temporary storage is not possible yet.
-    private final List<User> userCache;
+    private final Cache<User> userCache;
     private final List<Message> messageCache;
 
     RJA(List<CachingPolicy> cachingPolicies) {
 
-        if(cachingPolicies.contains(CachingPolicy.MEMBER)) userCache = new ArrayList<>();
+        if(cachingPolicies.contains(CachingPolicy.MEMBER)) userCache = new Cache<>();
         else userCache = null;
 
         if(cachingPolicies.contains(CachingPolicy.MESSAGE)) messageCache = new ArrayList<>();
@@ -52,46 +54,47 @@ public abstract class RJA {
 
     /**
      * Retrieves a user from the cache.
-     * If the user is not in the cache, an empty user instance will be created. This empty user will only contain the id.
+     * If the user is not in the cache, the user will be fetched from the API.
+     * If {@link CachingPolicy#MEMBER} is disabled, the user will <b>always</b> be fetched from the API and possibly null.
      * @param id The id of the user.
-     * @return The restaction containing the user. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the user. User can be null.
+     * @return The RestAction containing the user. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the user. User can be null.
      *
-     * @throws DisabledCacheException If the caching policy for {@link CachingPolicy#MEMBER} is disabled.
-     *
-     * @see User#empty(RJA, String)
      * @see RestAction
      *
      */
     public RestAction<User> retrieveUser(String id) {
-        if(userCache == null) throw new DisabledCacheException(CachingPolicy.MEMBER);
+        final RJA rja = this;
         return new RestAction<>(this) {
             @Override
             public User complete() {
-                User u = userCache.stream().filter(user -> user.getId().equals(id)).findFirst().orElse(null);
-                if(u == null) {
-                    return User.empty(RJA.this, id);
+                if(userCache != null) {
+                    // Caching for User is enabled
+                    User u = userCache.stream().filter(user -> user.getId().equals(id)).findFirst().orElse(null);
+                    if(u != null) return u;
                 }
-                return u;
+                // Caching is disabled or user is not found in cache
+                FetchUserRequest request = new FetchUserRequest(id);
+                return getRequestHandler().sendRequest(rja, request);
             }
         };
     }
 
     /**
      * Retrieves a message from the cache.
-     * If the message is not in the cache, this method will return null.
+     * If the message is not in the cache, the message will be fetched from the API. TODO
      * @param id The id of the message.
      * @return The restaction containing the message. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the message. Message can be null.
      *
-     * @throws DisabledCacheException If the caching policy for {@link CachingPolicy#MESSAGE} is disabled.
-     *
      * @see RestAction
      */
-    public RestAction<Message> retrieveMessage(String id) {
-        if(messageCache == null) throw new DisabledCacheException(CachingPolicy.MESSAGE);
+    public RestAction<Message> retrieveMessage(String channel, String id) {
         return new RestAction<>(this) {
             @Override
             public Message complete() {
-                return messageCache.stream().filter(message -> message.getId().equals(id)).findFirst().orElse(null);
+                Message msg = messageCache.stream().filter(message -> message.getId().equals(id)).findFirst().orElse(null);
+                if(msg != null) return msg;
+                // TODO: Fetch message from API
+                return null;
             }
         };
     }
@@ -116,8 +119,30 @@ public abstract class RJA {
      * Retrieves the User cache.
      * @return The user cache or null if the caching policy for {@link CachingPolicy#MEMBER} is disabled.
      */
-    public List<User> getUserCache() {
+    public Cache<User> getUserCache() {
         return userCache;
+    }
+
+    /**
+     * Retrieves the Message cache.
+     * @return The message cache or null if the caching policy for {@link CachingPolicy#MESSAGE} is disabled.
+     */
+    public List<Message> getMessageCache() {
+        return messageCache;
+    }
+
+    public RestAction<User> getSelfUser() {
+        return new RestAction<User>(this) {
+            @Override
+            public User complete() {
+                FetchSelfRequest request = new FetchSelfRequest();
+                return getRequestHandler().sendRequest(RJA.this, request);
+            }
+        };
+    }
+
+    public EditSelfRestAction editSelfUser() {
+        return new EditSelfRestAction(this);
     }
 
 }

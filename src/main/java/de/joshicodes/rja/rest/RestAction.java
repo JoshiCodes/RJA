@@ -62,7 +62,7 @@ public abstract class RestAction<T> {
      * @see #queue(Consumer)
      * @see #complete()
      */
-    public void queue(@Nullable Consumer<T> success, @Nullable Consumer<Exception> failure) {
+    public void queue(@Nullable Consumer<T> success, @Nullable Consumer<Throwable> failure) {
         new Thread(() -> {
             try {
                 T t = complete();
