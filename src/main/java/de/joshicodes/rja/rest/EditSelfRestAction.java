@@ -36,7 +36,6 @@ public class EditSelfRestAction extends RestAction<User> {
                 return presence;
             }
         });
-        System.out.println(request.getJsonData());
         return this;
     }
 

@@ -109,7 +109,7 @@ public abstract class RJA {
         User u = User.from(this, user);
         if(u != null) {
             userCache.add(u);
-            getLogger().info("Loaded user " + u.getUsername());
+            //getLogger().info("Loaded user " + u.getUsername()); // DEBUG
         } else {
             getLogger().warning("Failed to load user!");
         }
