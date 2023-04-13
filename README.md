@@ -79,6 +79,13 @@ rja.retrieveUser("userId").queue(user -> {
 User user = rja.retrieveUser("userId").complete();
 ```
 
+### Sending Messages
+You can send Messages to every `GenericChannel` using `GenericChannel#sendMessage` or `GenericChannel#sendEmbeds`.
+Both of this Methods return a `MessageAction` which can be used to modify the message before sending it.
+<br>
+To send a private Message to a User, you can use `User#openPrivateChannel` to retrieve a RestAction with the DirectChannel of the User.
+To send messages to this `DirectChannel`, you can use the same methods as with `GenericChannel`.
+
 ### EventListeners
 EventListeners are used to handle events. You can register them with the `RJABuilder#registerEventListener()` method.
 ```java
