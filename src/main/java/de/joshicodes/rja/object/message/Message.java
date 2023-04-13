@@ -7,6 +7,7 @@ import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
 import de.joshicodes.rja.object.user.User;
+import de.joshicodes.rja.rest.MessageSendAction;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
@@ -166,5 +167,17 @@ public abstract class Message {
     abstract public List<String> getReplies();
 
     abstract public Masquerade getMasquerade();
+
+    public MessageSendAction reply(String content, boolean mention) {
+        return getRJA().retrieveChannel(getChannelId()).complete().sendMessage(content).addReply(getId(), mention);
+    }
+
+    public MessageSendAction reply(String content) {
+        return reply(content, false);
+    }
+
+    public MessageSendAction reply(boolean mention) {
+        return getRJA().retrieveChannel(getChannelId()).complete().sendMessage(null).addReply(getId(), mention);
+    }
 
 }
