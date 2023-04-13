@@ -135,12 +135,12 @@ public class EmbedBuilder {
         return new MessageEmbed() {
             @Override
             public String getIconUrl() {
-                return null;
+                return iconUrl;
             }
 
             @Override
             public String getUrl() {
-                return null;
+                return url;
             }
 
             @Override
@@ -155,7 +155,7 @@ public class EmbedBuilder {
 
             @Override
             public String getMedia() {
-                return null;
+                return media;
             }
 
             @Override
