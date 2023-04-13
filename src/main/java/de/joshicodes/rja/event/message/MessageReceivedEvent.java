@@ -41,6 +41,8 @@ public class MessageReceivedEvent extends IncomingEvent {
         if(!object.get("type").getAsString().equals("Message")) {
             return null;
         }
+        String authorId = object.get("author").getAsString();
+        User author = rja.retrieveUser(authorId).complete();
         Message message = Message.from(rja, object);
         rja.cacheMessage(message);
         return new MessageReceivedEvent(rja, author, message);
