@@ -2,9 +2,9 @@ package de.joshicodes.rja.rest;
 
 import com.google.gson.JsonArray;
 import de.joshicodes.rja.RJA;
-import de.joshicodes.rja.object.User;
-import de.joshicodes.rja.object.UserStatus;
-import de.joshicodes.rja.requests.rest.self.EditSelfUserRequest;
+import de.joshicodes.rja.object.user.User;
+import de.joshicodes.rja.object.user.UserStatus;
+import de.joshicodes.rja.requests.rest.user.self.EditSelfUserRequest;
 
 public class EditSelfRestAction extends RestAction<User> {
 

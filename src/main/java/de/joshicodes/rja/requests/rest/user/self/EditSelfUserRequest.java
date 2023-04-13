@@ -1,10 +1,11 @@
-package de.joshicodes.rja.requests.rest.self;
+package de.joshicodes.rja.requests.rest.user.self;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
-import de.joshicodes.rja.object.User;
-import de.joshicodes.rja.object.UserStatus;
+import de.joshicodes.rja.object.user.User;
+import de.joshicodes.rja.object.user.UserStatus;
 import de.joshicodes.rja.requests.rest.RestRequest;
 
 public class EditSelfUserRequest extends RestRequest<User> {
@@ -32,8 +33,10 @@ public class EditSelfUserRequest extends RestRequest<User> {
     }
 
     @Override
-    public User fetch(RJA rja, JsonObject data) {
-        return User.from(rja, data);
+    public User fetch(RJA rja, JsonElement data) {
+        if(!data.isJsonObject())
+            return null;
+        return User.from(rja, data.getAsJsonObject());
     }
 
 }

@@ -2,18 +2,20 @@ package de.joshicodes.rja;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.cache.Cache;
-import de.joshicodes.rja.object.Message;
-import de.joshicodes.rja.object.User;
+import de.joshicodes.rja.object.channel.DirectChannel;
+import de.joshicodes.rja.object.channel.TextChannel;
+import de.joshicodes.rja.object.message.Message;
+import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
-import de.joshicodes.rja.requests.rest.FetchUserRequest;
+import de.joshicodes.rja.requests.rest.user.FetchUserRequest;
 import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
-import de.joshicodes.rja.requests.rest.self.FetchSelfRequest;
+import de.joshicodes.rja.requests.rest.user.OpenDirectMessageRequest;
+import de.joshicodes.rja.requests.rest.user.self.FetchSelfRequest;
 import de.joshicodes.rja.rest.EditSelfRestAction;
 import de.joshicodes.rja.rest.RestAction;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -106,6 +108,29 @@ public abstract class RJA {
         };
     }
 
+    public RestAction<DirectChannel> retrieveDirectChannel(String id) {
+        final RJA rja = this;
+        return new RestAction<>(this) {
+            @Override
+            public DirectChannel complete() {
+                if(channelCache != null) {
+                    // Caching for Channel is enabled
+                    GenericChannel c = channelCache.stream().filter(channel -> channel.getId().equals(id)).findFirst().orElse(null);
+                    if(c instanceof DirectChannel dc) return dc;
+                }
+                // Caching is disabled or channel is not found in cache
+                OpenDirectMessageRequest request = new OpenDirectMessageRequest(id);
+                return getRequestHandler().sendRequest(rja, request);
+            }
+        };
+    }
+
+    /**
+     * Retrieves a GenericChannel from the cache or from the API.
+     * For specific channel types, use the corresponding methods.
+     * @param id The id of the channel.
+     * @return The RestAction containing the channel. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the channel. Channel can be null.
+     */
     public RestAction<GenericChannel> retrieveChannel(String id) {
         final RJA rja = this;
         return new RestAction<>(this) {
@@ -119,6 +144,17 @@ public abstract class RJA {
                 // Caching is disabled or channel is not found in cache
                 FetchChannelRequest request = new FetchChannelRequest(id);
                 return getRequestHandler().sendRequest(rja, request);
+            }
+        };
+    }
+
+    public RestAction<TextChannel> retrieveTextChannel(String id) {
+        return new RestAction<>(this) {
+            @Override
+            public TextChannel complete() {
+                GenericChannel c = retrieveChannel(id).complete();
+                if(c instanceof TextChannel tc) return tc;
+                return null;
             }
         };
     }

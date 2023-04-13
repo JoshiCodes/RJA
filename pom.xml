@@ -6,7 +6,7 @@
 
     <groupId>de.joshicodes</groupId>
     <artifactId>rja</artifactId>
-    <version>1.0-alpha.5b</version>
+    <version>1.0-alpha.5c</version>
 
     <description>
         RJA is a Java Library for the Revolt API.
@@ -24,6 +24,10 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <build>
+        <finalName>RJA-${version}</finalName>
+    </build>
 
     <distributionManagement>
         <repository>

@@ -1,8 +1,13 @@
-package de.joshicodes.rja.object;
+package de.joshicodes.rja.object.user;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
+import de.joshicodes.rja.object.Avatar;
+import de.joshicodes.rja.object.channel.DirectChannel;
+import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.enums.RelationShip;
+import de.joshicodes.rja.object.message.MessageReceiver;
+import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
 public abstract class User {
@@ -21,6 +26,10 @@ public abstract class User {
     abstract public BotInfo getBotInfo();
     abstract public RelationShip getRelationship();
     abstract public boolean isOnline();
+
+    public RestAction<DirectChannel> openPrivateChannel() {
+       return getRJA().retrieveDirectChannel(getId());
+    }
 
     public static User from(final RJA rja, JsonObject object) {
 

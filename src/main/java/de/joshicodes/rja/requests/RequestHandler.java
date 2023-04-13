@@ -73,10 +73,7 @@ public class RequestHandler extends WebSocketClient {
         if(e == null) {
             return null;
         }
-        if(!e.isJsonObject()) {
-            return null;
-        }
-        return request.fetch(rja, e.getAsJsonObject());
+        return request.fetch(rja, e);
     }
 
     public void sendRequest(PacketRequest request) {

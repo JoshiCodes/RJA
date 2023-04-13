@@ -1,5 +1,6 @@
 package de.joshicodes.rja.requests.rest.channel.info;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.object.channel.GenericChannel;
@@ -12,8 +13,10 @@ public class FetchChannelRequest extends RestRequest<GenericChannel> {
     }
 
     @Override
-    public GenericChannel fetch(RJA rja, JsonObject data) {
-        return rja.cacheChannel(data);
+    public GenericChannel fetch(RJA rja, JsonElement data) {
+        if(!data.isJsonObject())
+            return null;
+        return rja.cacheChannel(data.getAsJsonObject());
     }
 
 }

@@ -6,7 +6,7 @@ import de.joshicodes.rja.event.EventListener;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.event.message.MessageReceivedEvent;
 import de.joshicodes.rja.event.self.ReadyEvent;
-import de.joshicodes.rja.object.UserStatus;
+import de.joshicodes.rja.object.user.UserStatus;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.rest.RestRequest;
@@ -249,7 +249,8 @@ public class RJABuilder {
                     request.getMethod(),
                     HttpUtil.AUTH_HEADER_BOT,
                     token,
-                    request.getJsonData()
+                    request.getJsonData(),
+                    request.getHeaders()
             );
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);

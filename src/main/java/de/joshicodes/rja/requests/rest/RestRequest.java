@@ -12,6 +12,7 @@ public abstract class RestRequest<T> {
     private final String endpoint;
 
     private HashMap<String, Object> data;
+    private HashMap<String, String> headers = null;
 
     public RestRequest(String endpoint) {
         this("GET", endpoint);
@@ -58,7 +59,11 @@ public abstract class RestRequest<T> {
         return this;
     }
 
-    public abstract T fetch(RJA rja, JsonObject data);
+    public void setHeaders(HashMap<String, String> headers) {
+        this.headers = headers;
+    }
+
+    public abstract T fetch(RJA rja, JsonElement data);
 
     public String getMethod() {
         return method;
@@ -70,6 +75,10 @@ public abstract class RestRequest<T> {
 
     public HashMap<String, Object> getData() {
         return data;
+    }
+
+    public HashMap<String, String> getHeaders() {
+        return headers;
     }
 
     public JsonObject getJsonData() {

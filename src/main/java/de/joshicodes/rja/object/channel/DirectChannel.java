@@ -33,23 +33,23 @@ public abstract class DirectChannel extends GenericChannel {
 
             @Override
             public String getId() {
-                return null;
+                return id;
             }
 
             @Override
             public boolean isActive() {
-                return false;
+                return active;
             }
 
             @Override
             public String[] getRecipients() {
-                return new String[0];
+                return recipientIds;
             }
 
             @Nullable
             @Override
             public String getLastMessageId() {
-                return null;
+                return lastMessageId;
             }
         };
     }

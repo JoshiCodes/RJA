@@ -1,4 +1,4 @@
-package de.joshicodes.rja.object;
+package de.joshicodes.rja.object.user;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.util.JsonUtil;
