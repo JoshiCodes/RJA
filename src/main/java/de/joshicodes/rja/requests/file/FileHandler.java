@@ -44,7 +44,7 @@ public class FileHandler {
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8), true);
 
             writer.append("--" + boundary).append("\r\n");
-            writer.append("Content-Disposition: form-data; name=\"").append("file").append("\"; filename=\"").append(file.getName()).append("\"").append("\r\n");
+            writer.append("Content-Disposition: form-data; name=\"").append(file.getName()).append("\"; filename=\"").append(file.getName()).append("\"").append("\r\n");
             writer.append("Content-Type: ").append(URLConnection.guessContentTypeFromName(file.getName())).append("\r\n");
             writer.append("Content-Transfer-Encoding: binary").append("\r\n");
             writer.append("\r\n").flush();
