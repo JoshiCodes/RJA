@@ -2,6 +2,8 @@ package de.joshicodes.rja;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.cache.Cache;
+import de.joshicodes.rja.object.Attachment;
+import de.joshicodes.rja.object.InputFile;
 import de.joshicodes.rja.object.channel.DirectChannel;
 import de.joshicodes.rja.object.channel.TextChannel;
 import de.joshicodes.rja.object.message.Message;
@@ -9,6 +11,7 @@ import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
+import de.joshicodes.rja.requests.file.FileHandler;
 import de.joshicodes.rja.requests.rest.user.FetchUserRequest;
 import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.user.OpenDirectMessageRequest;
@@ -16,6 +19,8 @@ import de.joshicodes.rja.requests.rest.user.self.FetchSelfRequest;
 import de.joshicodes.rja.rest.EditSelfRestAction;
 import de.joshicodes.rja.rest.RestAction;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -35,7 +40,9 @@ public abstract class RJA {
     private final Cache<Message> messageCache;
     private final Cache<GenericChannel> channelCache;
 
-    RJA(List<CachingPolicy> cachingPolicies) {
+    private final FileHandler fileHandler;
+
+    RJA(RJABuilder builder, List<CachingPolicy> cachingPolicies) {
 
         if(cachingPolicies.contains(CachingPolicy.MEMBER)) userCache = new Cache<>();
         else userCache = null;
@@ -49,6 +56,8 @@ public abstract class RJA {
             channelCache = null;
         }
 
+        fileHandler = new FileHandler(builder.getFileserverUrl(), this);
+
     }
 
     abstract public Logger getLogger();
@@ -56,6 +65,22 @@ public abstract class RJA {
     abstract public String getApiUrl();
     abstract public RequestHandler getRequestHandler();
     abstract public Thread mainThread();
+
+    public Attachment uploadFile(File file) {
+        try {
+            return fileHandler.uploadFile(InputFile.of(file));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Attachment uploadFile(InputFile file) {
+        try {
+            return fileHandler.uploadFile(file);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void shutdownNow() {
         mainThread().interrupt();

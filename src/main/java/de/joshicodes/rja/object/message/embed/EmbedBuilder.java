@@ -1,5 +1,6 @@
 package de.joshicodes.rja.object.message.embed;
 
+import de.joshicodes.rja.object.Attachment;
 import de.joshicodes.rja.object.RJAColor;
 
 import java.awt.*;
@@ -74,8 +75,8 @@ public class EmbedBuilder {
      * @param media The media of the embed.
      * @return This EmbedBuilder instance.
      */
-    public EmbedBuilder setMedia(String media) {
-        this.media = media;
+    public EmbedBuilder setMedia(Attachment media) {
+        this.media = media.getId();
         return this;
     }
 

@@ -11,6 +11,7 @@ import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.util.HttpUtil;
+import de.joshicodes.rja.util.JsonUtil;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -68,6 +69,17 @@ public class RJABuilder {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public String getFileserverUrl() {
+        // Autumn
+        JsonObject features = JsonUtil.getObject(apiBase, "features", null);
+        if(features == null) return null;
+        JsonObject autumn = JsonUtil.getObject(features, "autumn", null);
+        if(autumn == null) return null;
+        boolean enabled = JsonUtil.getBoolean(autumn, "enabled", false);
+        if(!enabled) return null;
+        return JsonUtil.getString(autumn, "url", null);
     }
 
     public String getApiUrl() {
@@ -199,7 +211,7 @@ public class RJABuilder {
         );
 
         final RequestHandler requestHandler = new RequestHandler(this, eventListeners, events);
-        final RJA rja = new RJA(cachingPolicies) {
+        final RJA rja = new RJA(this, cachingPolicies) {
 
             @Override
             public Logger getLogger() {
