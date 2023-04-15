@@ -1,4 +1,4 @@
-package de.joshicodes.rja.rest;
+package de.joshicodes.rja.rest.message;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -7,6 +7,7 @@ import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
 import de.joshicodes.rja.requests.rest.message.MessageSendRequest;
+import de.joshicodes.rja.rest.RestAction;
 
 import java.util.HashMap;
 import java.util.List;

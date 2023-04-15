@@ -1,10 +1,8 @@
 package de.joshicodes.rja.object.message;
 
 import de.joshicodes.rja.RJA;
-import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
-import de.joshicodes.rja.rest.MessageSendAction;
-import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.rest.message.MessageSendAction;
 
 public abstract class MessageReceiver {
 

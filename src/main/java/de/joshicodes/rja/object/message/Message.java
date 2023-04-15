@@ -7,7 +7,8 @@ import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
 import de.joshicodes.rja.object.user.User;
-import de.joshicodes.rja.rest.MessageSendAction;
+import de.joshicodes.rja.rest.message.MessageEditAction;
+import de.joshicodes.rja.rest.message.MessageSendAction;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
@@ -178,6 +179,18 @@ public abstract class Message {
 
     public MessageSendAction reply(boolean mention) {
         return getRJA().retrieveChannel(getChannelId()).complete().sendMessage(null).addReply(getId(), mention);
+    }
+
+    public MessageEditAction edit(final String content) {
+        return new MessageEditAction(getRJA(), this).setContent(content);
+    }
+
+    public MessageEditAction edit(final MessageEmbed embed) {
+        return new MessageEditAction(getRJA(), this).addEmbed(embed);
+    }
+
+    public MessageEditAction edit(final MessageEmbed... embeds) {
+        return new MessageEditAction(getRJA(), this).setEmbeds(embeds);
     }
 
 }

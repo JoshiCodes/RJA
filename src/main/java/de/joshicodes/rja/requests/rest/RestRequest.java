@@ -23,6 +23,14 @@ public abstract class RestRequest<T> {
         this.endpoint = endpoint;
     }
 
+    public boolean hasData() {
+        return data != null;
+    }
+
+    public boolean hasData(String key) {
+        return data != null && data.containsKey(key);
+    }
+
     public RestRequest<T> addData(String key, String value) {
         if(data == null) data = new HashMap<>();
         data.put(key, value);
