@@ -90,4 +90,9 @@ public abstract class TextChannel extends ServerChannel {
         return "<#" + getId() + ">";
     }
 
+    @Override
+    public ChannelType getType() {
+        return ChannelType.TEXT_CHANNEL;
+    }
+
 }

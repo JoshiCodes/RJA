@@ -65,4 +65,9 @@ public abstract class DirectChannel extends GenericChannel {
         return null;
     }
 
+    @Override
+    public ChannelType getType() {
+        return ChannelType.DIRECT_MESSAGE;
+    }
+
 }

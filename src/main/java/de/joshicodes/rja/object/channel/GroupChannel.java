@@ -86,4 +86,9 @@ public abstract class GroupChannel extends GenericChannel {
         return null;
     }
 
+    @Override
+    public ChannelType getType() {
+        return ChannelType.GROUP_CHANNEL;
+    }
+
 }

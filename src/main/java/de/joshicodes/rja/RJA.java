@@ -2,8 +2,11 @@ package de.joshicodes.rja;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.cache.Cache;
+import de.joshicodes.rja.exception.InvalidChannelTypeException;
 import de.joshicodes.rja.object.Attachment;
+import de.joshicodes.rja.object.Emoji;
 import de.joshicodes.rja.object.InputFile;
+import de.joshicodes.rja.object.channel.ChannelType;
 import de.joshicodes.rja.object.channel.DirectChannel;
 import de.joshicodes.rja.object.channel.TextChannel;
 import de.joshicodes.rja.object.message.Message;
@@ -12,6 +15,7 @@ import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.file.FileHandler;
+import de.joshicodes.rja.requests.rest.message.FetchMessageRequest;
 import de.joshicodes.rja.requests.rest.user.FetchUserRequest;
 import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.user.OpenDirectMessageRequest;
@@ -114,8 +118,8 @@ public abstract class RJA {
     }
 
     /**
-     * Retrieves a message from the cache.
-     * If the message is not in the cache, the message will be fetched from the API. TODO
+     * Retrieves a message from the cache or the API.
+     * If the message is not in the cache, the message will be fetched from the API.
      * @param id The id of the message.
      * @return The restaction containing the message. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the message. Message can be null.
      *
@@ -125,10 +129,13 @@ public abstract class RJA {
         return new RestAction<>(this) {
             @Override
             public Message complete() {
-                Message msg = messageCache.stream().filter(message -> message.getId().equals(id)).findFirst().orElse(null);
-                if(msg != null) return msg;
-                // TODO: Fetch message from API
-                return null;
+                if(messageCache != null) {
+                    Message msg = messageCache.stream().filter(message -> message.getId().equals(id)).findFirst().orElse(null);
+                    if(msg != null) return msg;
+                }
+                // Message is not in cache or caching is disabled
+                FetchMessageRequest request = new FetchMessageRequest(channel, id);
+                return getRequestHandler().sendRequest(RJA.this, request);
             }
         };
     }
@@ -141,7 +148,10 @@ public abstract class RJA {
                 if(channelCache != null) {
                     // Caching for Channel is enabled
                     GenericChannel c = channelCache.stream().filter(channel -> channel.getId().equals(id)).findFirst().orElse(null);
-                    if(c instanceof DirectChannel dc) return dc;
+                    if(c != null) {
+                        if(c instanceof DirectChannel dc) return dc;
+                        else throw new InvalidChannelTypeException(id, ChannelType.DIRECT_MESSAGE, c.getType());
+                    }
                 }
                 // Caching is disabled or channel is not found in cache
                 OpenDirectMessageRequest request = new OpenDirectMessageRequest(id);
@@ -185,14 +195,20 @@ public abstract class RJA {
     }
 
     public void cacheMessage(Message message) {
-        if(messageCache == null) return;
+        if(messageCache == null) return; // Caching is disabled
+        if(messageCache.stream().anyMatch(msg -> msg.getId().equals(message.getId()))) {
+            messageCache.stream().filter(msg -> msg.getId().equals(message.getId())).findFirst().ifPresent(messageCache::remove); // Message is cached, remove old one
+        }
         messageCache.add(message);
     }
 
     public void cacheUser(JsonObject user) {
-        if(userCache == null) return;
+        if(userCache == null) return; // Caching is disabled
         User u = User.from(this, user);
         if(u != null) {
+            if(userCache.stream().anyMatch(usr -> usr.getId().equals(u.getId()))) {
+                userCache.stream().filter(usr -> usr.getId().equals(u.getId())).findFirst().ifPresent(userCache::remove); // User is cached, remove old one
+            }
             userCache.add(u);
             //getLogger().info("Loaded user " + u.getUsername()); // DEBUG
         } else {
@@ -202,8 +218,11 @@ public abstract class RJA {
 
     public GenericChannel cacheChannel(JsonObject channel) {
         GenericChannel c = GenericChannel.from(this, channel);
-        if(channelCache == null) return c;
+        if(channelCache == null) return c; // Caching is disabled
         if(c != null) {
+            if(channelCache.stream().anyMatch(ch -> ch.getId().equals(c.getId()))) {
+                channelCache.stream().filter(ch -> ch.getId().equals(c.getId())).findFirst().ifPresent(channelCache::remove); // Channel is cached, remove old one
+            }
             channelCache.add(c);
             //getLogger().info("Loaded channel " + c.getName()); // DEBUG
         } else {

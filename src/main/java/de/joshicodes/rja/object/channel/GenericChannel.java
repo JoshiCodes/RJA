@@ -35,4 +35,6 @@ public abstract class GenericChannel extends MessageReceiver {
 
     abstract public RestAction<Void> close();
 
+    abstract public ChannelType getType();
+
 }
