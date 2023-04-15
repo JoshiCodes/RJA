@@ -5,26 +5,41 @@ import de.joshicodes.rja.RJA;
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public abstract class RestAction<T> {
+
+    private final boolean canMultiple;
+    private boolean executed = false;
 
     private final RJA rja;
 
     public RestAction(RJA rja) {
+        this(rja, false);
+    }
+
+    public RestAction(RJA rja, boolean canMultiple) {
         this.rja = rja;
+        this.canMultiple = canMultiple;
     }
 
     public RJA getRJA() {
         return rja;
     }
 
+    protected abstract T execute();
+
     /**
      * Executes the action and returns the result.
      * <b>This Method can block your current thread.</b>
      * @return The result of the action.
      */
-    abstract public T complete();
+    public T complete() {
+        if (!canMultiple && executed) {
+            throw new IllegalStateException("This action can only be executed once.");
+        }
+        this.executed = true;
+        return execute();
+    }
 
     /**
      * Queues the action to be executed in a new thread.
@@ -65,6 +80,10 @@ public abstract class RestAction<T> {
     public void queue(@Nullable Consumer<T> success, @Nullable Consumer<Throwable> failure) {
         new Thread(() -> {
             try {
+                if (!canMultiple && executed) {
+                    throw new IllegalStateException("This action can only be executed once.");
+                }
+                this.executed = true;
                 T t = complete();
                 if (success != null) {
                     success.accept(t);
@@ -78,7 +97,7 @@ public abstract class RestAction<T> {
     }
 
     public CompletableFuture<T> submit() {
-        return CompletableFuture.supplyAsync(this::complete);
+        return CompletableFuture.supplyAsync(this::execute);
     }
 
 }
