@@ -1,9 +1,6 @@
 package de.joshicodes.rja.cache;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -51,6 +48,15 @@ public class Cache<T> {
 
     public T getIf(Predicate<T> predicate) {
         return list.keySet().stream().filter(predicate).findFirst().orElse(null);
+    }
+
+    public boolean contains(T t) {
+        if(list.containsKey(t)) {
+            if(list.get(t) >= System.currentTimeMillis()) {
+                return true;
+            } else list.remove(t); // Remove if expired
+        }
+        return false;
     }
 
 }
