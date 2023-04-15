@@ -27,6 +27,10 @@ public abstract class User {
     abstract public RelationShip getRelationship();
     abstract public boolean isOnline();
 
+    public String getAsMention() {
+        return "<@" + getId() + ">";
+    }
+
     public RestAction<DirectChannel> openPrivateChannel() {
        return getRJA().retrieveDirectChannel(getId());
     }

@@ -86,4 +86,8 @@ public abstract class TextChannel extends ServerChannel {
         return null;
     }
 
+    public String getAsMention() {
+        return "<#" + getId() + ">";
+    }
+
 }
