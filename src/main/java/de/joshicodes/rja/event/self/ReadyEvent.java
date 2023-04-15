@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.Event;
 import de.joshicodes.rja.event.IncomingEvent;
+import de.joshicodes.rja.object.user.User;
+import de.joshicodes.rja.rest.RestAction;
 
 import javax.annotation.Nullable;
 
@@ -17,6 +19,14 @@ public class ReadyEvent extends IncomingEvent {
 
     public ReadyEvent(RJA rja) {
         super(rja, "Ready");
+    }
+
+    public User getSelf() {
+        return retrieveSelf().complete();
+    }
+
+    public RestAction<User> retrieveSelf() {
+        return getRJA().retrieveSelfUser();
     }
 
     @Override

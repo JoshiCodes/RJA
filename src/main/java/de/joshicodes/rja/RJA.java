@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.cache.Cache;
 import de.joshicodes.rja.exception.InvalidChannelTypeException;
 import de.joshicodes.rja.object.Attachment;
-import de.joshicodes.rja.object.Emoji;
 import de.joshicodes.rja.object.InputFile;
 import de.joshicodes.rja.object.channel.ChannelType;
 import de.joshicodes.rja.object.channel.DirectChannel;
@@ -32,8 +31,6 @@ import java.util.logging.Logger;
  * Represents the RJA API. (Revolt Java API)
  * Is used to handle events and send requests.
  * Should be created using the {@link RJABuilder}.
- *
- * @author JoshiCodes
  *
  * @see RJABuilder
  *

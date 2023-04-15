@@ -25,6 +25,16 @@ import java.util.logging.Logger;
 
 public class RJABuilder {
 
+    /**
+     * Creates a new RJABuilder instance with the given token and disables all caching.
+     * <b>Some Functions may not work, due to disabled caching. Please have a look at the README.md for more.</b>
+     * @param token The Bot token
+     * @return The RJABuilder instance
+     */
+    public static RJABuilder createWithoutCaching(String token) {
+        return new RJABuilder(token).disableCaching(CachingPolicy.values());
+    }
+
     private RJA build;
 
     public static final String DEFAULT_API_URL = "https://api.revolt.chat";
@@ -45,6 +55,8 @@ public class RJABuilder {
     /**
      * Creates a new RJABuilder instance with the given token.
      * @param token The Bot token
+     * <p>
+     * To disable caching, use {@link #createWithoutCaching(String)}
      */
     public RJABuilder(String token) {
 
