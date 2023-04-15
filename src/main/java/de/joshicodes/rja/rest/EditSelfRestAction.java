@@ -40,7 +40,7 @@ public class EditSelfRestAction extends RestAction<User> {
     }
 
     @Override
-    public User complete() {
+    protected User execute() {
         return getRJA().getRequestHandler().sendRequest(getRJA(), request);
     }
 

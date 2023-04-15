@@ -62,7 +62,7 @@ public class MessageSendAction extends RestAction<Message> {
     }
 
     @Override
-    public Message complete() {
+    protected Message execute() {
 
         MessageSendRequest request = new MessageSendRequest(receiver);
         if(content != null)

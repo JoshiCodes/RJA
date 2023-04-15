@@ -105,7 +105,7 @@ public abstract class RJA {
         final RJA rja = this;
         return new RestAction<>(this) {
             @Override
-            public User complete() {
+            public User execute() {
                 if(userCache != null) {
                     // Caching for User is enabled
                     User u = userCache.stream().filter(user -> user.getId().equals(id)).findFirst().orElse(null);
@@ -129,7 +129,7 @@ public abstract class RJA {
     public RestAction<Message> retrieveMessage(String channel, String id) {
         return new RestAction<>(this) {
             @Override
-            public Message complete() {
+            public Message execute() {
                 if(messageCache != null) {
                     Message msg = messageCache.stream().filter(message -> message.getId().equals(id)).findFirst().orElse(null);
                     if(msg != null) return msg;
@@ -145,7 +145,7 @@ public abstract class RJA {
         final RJA rja = this;
         return new RestAction<>(this) {
             @Override
-            public DirectChannel complete() {
+            public DirectChannel execute() {
                 if(channelCache != null) {
                     // Caching for Channel is enabled
                     GenericChannel c = channelCache.stream().filter(channel -> channel.getId().equals(id)).findFirst().orElse(null);
@@ -171,7 +171,7 @@ public abstract class RJA {
         final RJA rja = this;
         return new RestAction<>(this) {
             @Override
-            public GenericChannel complete() {
+            public GenericChannel execute() {
                 if(channelCache != null) {
                     // Caching for Channel is enabled
                     GenericChannel c = channelCache.stream().filter(channel -> channel.getId().equals(id)).findFirst().orElse(null);
@@ -187,7 +187,7 @@ public abstract class RJA {
     public RestAction<TextChannel> retrieveTextChannel(String id) {
         return new RestAction<>(this) {
             @Override
-            public TextChannel complete() {
+            public TextChannel execute() {
                 GenericChannel c = retrieveChannel(id).complete();
                 if(c instanceof TextChannel tc) return tc;
                 return null;
@@ -259,7 +259,7 @@ public abstract class RJA {
     public RestAction<User> retrieveSelfUser() {
         return new RestAction<>(this) {
             @Override
-            public User complete() {
+            public User execute() {
                 FetchSelfRequest request = new FetchSelfRequest();
                 return getRequestHandler().sendRequest(RJA.this, request);
             }

@@ -43,7 +43,7 @@ public class MessageEditAction extends RestAction<Message> {
     }
 
     @Override
-    public Message complete() {
+    protected Message execute() {
         EditMessageRequest request = new EditMessageRequest(message, content, embeds);
         if(!request.hasData() || (!request.hasData("content") && !request.hasData("embeds"))) {
             return message; // Nothing to edit, return original message
