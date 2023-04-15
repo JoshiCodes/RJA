@@ -121,3 +121,45 @@ RJA has a built-in caching system, which can be disabled for specific caches.
 By default, all caches are enabled.
 You can disable them with the `RJABuilder#disableCaching(CachingPolicy...)` method.
 If you disable a cache, you can still retrieve the data from the API, but it will not be cached and may result in a longer response time or rate limiting.
+
+
+### Examples
+You can find some examples in [src/examples](https://github.com/JoshiCodes/RJA/tree/master/src/examples/java)
+
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+## Dependencies
+RJA uses <b>Java 17</b>. All dependencies are managed by Maven.
+
+- Java-Websockets
+    - Version: 1.5.3
+    - [Github](https://github.com/TooTallNate/Java-WebSocket)
+
+- Gson
+    - Version: 2.10.1
+    - [Github](https://github.com/google/gson)
+
+- FindBugs (Used for javax.annotation)
+    - Version: 3.0.2
+    - [Github](https://findbugs.sourceforge.net)
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/) <br><br>
+You are welcome to use this API in your projects, but please give credit to me.
+<br><br>
+I am not affiliated with [Revolt.chat](https://Revolt.chat) in any way, the Revolt-API is not created by me.
+
+## Related Projects
+
+- revolt.js
+    - [Github](https://github.com/revoltchat/revolt.js)
+- revolt.py
+    - [Github](https://github.com/revoltchat/revolt.py)
+- JRV (Java)
+     - [Github](https://github.com/JRVLT/JRV)
+
+### See also
+- [Revolt.chat](https://Revolt.chat)
+- [Revolt-Documentation](https://developers.revolt.chat/)
+- [Revolt-API Github](https://github.com/revoltchat/api)
