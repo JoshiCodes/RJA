@@ -7,7 +7,7 @@ import de.joshicodes.rja.util.JsonUtil;
 
 import javax.annotation.Nullable;
 
-public abstract class TextChannel extends GenericChannel {
+public abstract class TextChannel extends ServerChannel {
 
     public static TextChannel from(final RJA rja, final JsonObject object) {
         final String type = JsonUtil.getString(object, "channel_type", null);
