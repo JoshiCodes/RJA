@@ -142,7 +142,7 @@ RJA uses <b>Java 17</b>. All dependencies are managed by Maven.
 
 - FindBugs (Used for javax.annotation)
     - Version: 3.0.2
-    - [Github](https://findbugs.sourceforge.net)
+    - [Sourceforge](https://findbugs.sourceforge.net)
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/) <br><br>
