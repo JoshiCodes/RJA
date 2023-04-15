@@ -144,12 +144,6 @@ RJA uses <b>Java 17</b>. All dependencies are managed by Maven.
     - Version: 3.0.2
     - [Sourceforge](https://findbugs.sourceforge.net)
 
-## License
-[MIT](https://choosealicense.com/licenses/mit/) <br><br>
-You are welcome to use this API in your projects, but please give credit to me.
-<br><br>
-I am not affiliated with [Revolt.chat](https://Revolt.chat) in any way, the Revolt-API is not created by me.
-
 ## Related Projects
 
 - revolt.js
@@ -163,3 +157,11 @@ I am not affiliated with [Revolt.chat](https://Revolt.chat) in any way, the Revo
 - [Revolt.chat](https://Revolt.chat)
 - [Revolt-Documentation](https://developers.revolt.chat/)
 - [Revolt-API Github](https://github.com/revoltchat/api)
+
+<br><br>
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/) <br><br>
+You are welcome to use this API in your projects, but please give credit to me.
+<br><br>
+I am not affiliated with [Revolt.chat](https://Revolt.chat) in any way, the Revolt-API is not created by me.
