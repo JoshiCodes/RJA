@@ -40,13 +40,20 @@ public class SimpleExample {
                 new EventListener() {
                     @EventHandler
                     public void onReady(ReadyEvent event) {
-                        System.out.println("Ready!" + event.getSelf().getUsername());
+                        event.getLogger().info("Ready from Event! Username: " + event.getSelf().getUsername());
                     }
                 }
         );
 
         // Build the RJA instance
         RJA rja = builder.build();
+
+        // Don't do anything with the RJA instance, as builder.build() is non-blocking and RJA may not be ready yet.
+        rja.awaitReady(); // Wait for RJA to be ready, blocking the current thread until RJA is ready. This can block forever, if RJA can't connect to the API due to whatever reason.
+        // You can also use rja.awaitReady(long, TimeUnit) to wait for a specific amount of time.
+        // Or check if RJA is ready with rja.isReady().
+
+        rja.getLogger().info("Ready! Username: " + rja.retrieveSelfUser().complete().getUsername());
 
     }
 

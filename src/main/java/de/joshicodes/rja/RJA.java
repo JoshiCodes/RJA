@@ -25,6 +25,8 @@ import de.joshicodes.rja.rest.RestAction;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -66,6 +68,8 @@ public abstract class RJA {
     abstract public String getApiUrl();
     abstract public RequestHandler getRequestHandler();
     abstract public Thread mainThread();
+
+    abstract public boolean isReady();
 
     public Attachment uploadFile(File file) {
         try {
@@ -264,6 +268,44 @@ public abstract class RJA {
 
     public EditSelfRestAction editSelfUser() {
         return new EditSelfRestAction(this);
+    }
+
+    /**
+     * Blocks the current thread until the bot is ready and connected to the Revolt API.
+     * This can lead to deadlocks if the bot is unable to connect to the API.
+     * Resumes if Instance is ready.
+     */
+    public void awaitReady() {
+        while(!isReady()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Blocks the current thread until the bot is ready and connected to the Revolt API.
+     * Resumes if Instance is ready.
+     * If the timeout is reached and the Instance is not yet ready, a {@link TimeoutException} is thrown.
+     * @param timeout The timeout in the specified time unit.
+     * @param unit The time unit of the timeout.
+     *
+     * @throws TimeoutException If the timeout is reached and the Instance is not yet ready.
+     */
+    public void awaitReady(long timeout, TimeUnit unit) throws TimeoutException {
+        long start = System.currentTimeMillis();
+        while(!isReady()) {
+            if(System.currentTimeMillis() - start > unit.toMillis(timeout)) {
+                throw new TimeoutException("Timeout while waiting for ready state!");
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

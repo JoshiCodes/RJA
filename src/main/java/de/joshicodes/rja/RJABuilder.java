@@ -19,6 +19,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -223,6 +224,7 @@ public class RJABuilder {
         );
 
         final RequestHandler requestHandler = new RequestHandler(this, eventListeners, events);
+        AtomicBoolean ready = new AtomicBoolean(false);
         final RJA rja = new RJA(this, cachingPolicies) {
 
             @Override
@@ -245,17 +247,27 @@ public class RJABuilder {
                 return thread;
             }
 
+            @Override
+            public boolean isReady() {
+                return ready.get();
+            }
+
         };
 
         new Thread() {
             @Override
             public void run() {
-                requestHandler.connect();
-                if(cleanStatus && status == null) {
-                    rja.editSelfUser().setStatus("", UserStatus.Presence.ONLINE).queue();
-                    rja.editSelfUser().remove("StatusText", "StatusPresence").queue();
-                } else if(status != null) {
-                    rja.editSelfUser().setStatus(status.text(), status.presence()).queue();
+                try {
+                    requestHandler.connectBlocking();
+                    ready.set(true);
+                    if(cleanStatus && status == null) {
+                        rja.editSelfUser().setStatus("", UserStatus.Presence.ONLINE).queue();
+                        rja.editSelfUser().remove("StatusText", "StatusPresence").queue();
+                    } else if(status != null) {
+                        rja.editSelfUser().setStatus(status.text(), status.presence()).queue();
+                    }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }.start();
