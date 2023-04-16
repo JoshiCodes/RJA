@@ -6,7 +6,7 @@
 
     <groupId>de.joshicodes</groupId>
     <artifactId>rja</artifactId>
-    <version>1.0-alpha.6b</version>
+    <version>1.0-alpha.6c</version>
 
     <description>
         Simple Java API for Revolt.
@@ -26,7 +26,7 @@
     </properties>
 
     <build>
-        <finalName>RJA-${version}</finalName>
+        <finalName>RJA-${project.version}</finalName>
 
         <plugins>
             <plugin>
@@ -84,6 +84,20 @@
             <groupId>org.java-websocket</groupId>
             <artifactId>Java-WebSocket</artifactId>
             <version>1.5.3</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
         </dependency>
 
 

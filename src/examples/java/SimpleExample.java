@@ -7,6 +7,7 @@ import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.object.user.UserStatus;
 
 import java.net.URISyntaxException;
+import java.util.logging.Level;
 
 public class SimpleExample {
 
@@ -18,14 +19,17 @@ public class SimpleExample {
         // Create a new RJABuilder
         RJABuilder builder = new RJABuilder(token); // You can also use RJABuilder#createWithoutCaching(String) to disable caching for all policies.
 
+
         // If you want to use a local instance of the Revolt API, you can set the API URL with:
         // builder.setApiUrl("localhost:3000");
+
 
         // Set the status of the bot
         builder.setStatus(
                 "Revolt Java API",    // The status message
                 UserStatus.Presence.ONLINE  // You can also use UserStatus.Presence.OFFLINE, UserStatus.Presence.IDLE, UserStatus.Presence.BUSY, UserStatus.Presence.FOCUS
         );
+
 
         // Disable caching for selected policies. By default, all policies are enabled.
         // You can also create a new RJABuilder with RJABuilder#createWithoutCaching(String) to disable caching for all policies.
@@ -34,6 +38,16 @@ public class SimpleExample {
                 CachingPolicy.MEMBER, // Disables caching for users
                 CachingPolicy.MESSAGE // Disables caching for messages
         );
+
+        // Enable caching for selected policies. By default, all policies are enabled.
+        // You can enable policies that were previously disabled, but it would be better to not disable them in the first place.
+        builder.enableCaching(
+                CachingPolicy.MEMBER // Enables caching for users
+        );
+        // In this Example CachingPolicy.MEMBER and CachingPolicy.MESSAGE were disabled,
+        // but CachingPolicy.MEMBER was enabled again.
+        // This means the same as if CachePolicy.MEMBER was never disabled.
+
 
         // Register an event listener
         builder.registerEventListener(
@@ -44,6 +58,7 @@ public class SimpleExample {
                     }
                 }
         );
+
 
         // Build the RJA instance
         RJA rja = builder.build();
