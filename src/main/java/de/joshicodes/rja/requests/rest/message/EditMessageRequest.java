@@ -15,10 +15,10 @@ public class EditMessageRequest extends RestRequest<Message> {
     public EditMessageRequest(final Message message, final @Nullable String content, final @Nullable List<MessageEmbed> embeds) {
         super("PATCH", "/channels/" + message.getChannelId() + "/messages/" + message.getId());
 
-        if(content != null && !content.isEmpty() && !content.isBlank() && !message.getContent().equals(content))
+        if((message.getContent() == null && content != null) || ((content != null && message.getContent() != null) && !content.isEmpty() && !content.isBlank() && !message.getContent().equals(content)))
             addData("content", content);
 
-        if(embeds != null && !embeds.isEmpty() && !message.getEmbeds().equals(embeds)) {
+        if((message.getEmbeds() == null && embeds != null) || ((embeds != null && message.getEmbeds() != null) && !embeds.isEmpty() && !message.getEmbeds().equals(embeds))) {
             JsonArray array = new JsonArray();
             embeds.forEach(embed -> array.add(embed.toJson()));
             addData("embeds", array);
