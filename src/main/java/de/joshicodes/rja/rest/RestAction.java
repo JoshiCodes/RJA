@@ -80,10 +80,6 @@ public abstract class RestAction<T> {
     public void queue(@Nullable Consumer<T> success, @Nullable Consumer<Throwable> failure) {
         new Thread(() -> {
             try {
-                if (!canMultiple && executed) {
-                    throw new IllegalStateException("This action can only be executed once.");
-                }
-                this.executed = true;
                 T t = complete();
                 if (success != null) {
                     success.accept(t);
