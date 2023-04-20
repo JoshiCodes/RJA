@@ -3,7 +3,7 @@
 ![Github Release](https://img.shields.io/github/v/release/JoshiCodes/RJA?include_prereleases)
 
 ### Note: This is a work in progress, and is not yet ready for use.
-
+### Also, the Revolt-API may change at any time, so this API may not work anymore. Please open an issue if you find any bugs or have any suggestions.
 
 ## Install
 
@@ -162,6 +162,6 @@ RJA uses <b>Java 17</b>. All dependencies are managed by Maven.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/) <br><br>
-You are welcome to use this API in your projects, but please give credit to me.
+You are welcome to use this API in your projects, but please credit me if possible.
 <br><br>
-I am not affiliated with [Revolt.chat](https://Revolt.chat) in any way, the Revolt-API is not created by me.
+I am not affiliated with [Revolt.chat](https://Revolt.chat) in any way and the Revolt-API is not created by me.
