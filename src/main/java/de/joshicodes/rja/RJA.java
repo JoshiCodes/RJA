@@ -3,6 +3,7 @@ package de.joshicodes.rja;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.cache.Cache;
 import de.joshicodes.rja.exception.InvalidChannelTypeException;
+import de.joshicodes.rja.exception.RJAPingException;
 import de.joshicodes.rja.object.Attachment;
 import de.joshicodes.rja.object.InputFile;
 import de.joshicodes.rja.object.channel.ChannelType;
@@ -24,6 +25,8 @@ import de.joshicodes.rja.rest.RestAction;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -70,6 +73,40 @@ public abstract class RJA {
     abstract public Thread mainThread();
 
     abstract public boolean isReady();
+
+    /**
+     * Pings the Rest API, as specified in {@link RJABuilder#setApiUrl(String)}
+     * Uses {@link #getPing(int)} with a timeout of 15 seconds.
+     * @return The RestAction containing the ping in milliseconds. Use {@link RestAction#complete()} or {@link RestAction#queue} to execute the ping request and receive the ping.
+     */
+    public RestAction<Long> getPing() {
+        return getPing(15000);  // 15000 = 15 seconds, default timeout
+    }
+
+    /**
+     * Pings the Rest API, as specified in {@link RJABuilder#setApiUrl(String)}
+     * @param timeout The timeout in milliseconds
+     * @return The RestAction containing the ping in milliseconds. Use {@link RestAction#complete()} or {@link RestAction#queue} to execute the ping request and receive the ping.
+     */
+    public RestAction<Long> getPing(final int timeout) {
+        return new RestAction<>(this) {
+            @Override
+            protected Long execute() {
+                long start = System.currentTimeMillis();
+                try {
+                    InetAddress[] addresses = InetAddress.getAllByName(getApiUrl().replaceAll("https://", "").replaceAll("http://", ""));
+                    for (InetAddress inetAddress : addresses) {
+                        if (inetAddress.isReachable(timeout)) {
+                            return System.currentTimeMillis() - start;
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RJAPingException("Cannot Ping Revolt REST-API", e);
+                }
+                throw new RJAPingException("Cannot Ping Revolt REST-API");
+            }
+        };
+    }
 
     public Attachment uploadFile(File file) {
         try {
