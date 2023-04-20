@@ -17,6 +17,7 @@ import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.file.FileHandler;
 import de.joshicodes.rja.requests.rest.message.FetchMessageRequest;
+import de.joshicodes.rja.requests.rest.server.FetchServerRequest;
 import de.joshicodes.rja.requests.rest.user.FetchUserRequest;
 import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.user.OpenDirectMessageRequest;
@@ -232,6 +233,23 @@ public abstract class RJA {
                 GenericChannel c = retrieveChannel(id).complete();
                 if(c instanceof TextChannel tc) return tc;
                 return null;
+            }
+        };
+    }
+
+    public RestAction<Server> retrieveServer(String serverId) {
+        final RJA rja = this;
+        return new RestAction<>(this) {
+            @Override
+            public Server execute() {
+                if(serverCache != null) {
+                    // Caching for Server is enabled
+                    Server s = serverCache.stream().filter(server -> server.getId().equals(serverId)).findFirst().orElse(null);
+                    if(s != null) return s;
+                }
+                // Caching is disabled or server is not found in cache
+                FetchServerRequest request = new FetchServerRequest(serverId);
+                return getRequestHandler().sendRequest(rja, request);
             }
         };
     }

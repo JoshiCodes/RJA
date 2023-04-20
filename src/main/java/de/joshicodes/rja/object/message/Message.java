@@ -169,6 +169,10 @@ public abstract class Message {
 
     abstract public Masquerade getMasquerade();
 
+    public RestAction<GenericChannel> getChannel() {
+        return getRJA().retrieveChannel(getChannelId());
+    }
+
     public MessageSendAction reply(String content, boolean mention) {
         return getRJA().retrieveChannel(getChannelId()).complete().sendMessage(content).addReply(getId(), mention);
     }

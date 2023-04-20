@@ -3,6 +3,7 @@ package de.joshicodes.rja.event.message;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
+import de.joshicodes.rja.object.channel.ServerChannel;
 import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.user.User;
 
@@ -31,6 +32,10 @@ public class MessageReceivedEvent extends IncomingEvent {
 
     public boolean fromBot() {
         return author.getBotInfo().isBot();
+    }
+
+    public boolean isFromServer() {
+        return message.getChannel().complete() instanceof ServerChannel;
     }
 
     @Override
