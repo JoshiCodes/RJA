@@ -37,8 +37,17 @@ public class ReadyEvent extends IncomingEvent {
             rja.cacheUser(user.getAsJsonObject());
         }
         JsonArray servers = object.get("servers").getAsJsonArray();
+        for(JsonElement server : servers) {
+            if(!server.isJsonObject()) continue;
+            rja.cacheServer(server.getAsJsonObject());
+        }
         JsonArray channels = object.get("channels").getAsJsonArray();
+        for(JsonElement channel : channels) {
+            if(!channel.isJsonObject()) continue;
+            rja.cacheChannel(channel.getAsJsonObject());
+        }
         JsonArray members = object.get("members").getAsJsonArray();
+        // TODO: Cache members
         return new ReadyEvent(rja);
     }
 

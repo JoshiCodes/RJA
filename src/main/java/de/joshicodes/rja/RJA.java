@@ -10,6 +10,7 @@ import de.joshicodes.rja.object.channel.ChannelType;
 import de.joshicodes.rja.object.channel.DirectChannel;
 import de.joshicodes.rja.object.channel.TextChannel;
 import de.joshicodes.rja.object.message.Message;
+import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.enums.CachingPolicy;
@@ -45,6 +46,7 @@ public abstract class RJA {
     private final Cache<User> userCache;
     private final Cache<Message> messageCache;
     private final Cache<GenericChannel> channelCache;
+    private final Cache<Server> serverCache;
 
     private final FileHandler fileHandler;
 
@@ -58,8 +60,10 @@ public abstract class RJA {
 
         if(cachingPolicies.contains(CachingPolicy.SERVER)) {
             channelCache = new Cache<>();
+            serverCache = new Cache<>();
         } else {
             channelCache = null;
+            serverCache = null;
         }
 
         fileHandler = new FileHandler(builder.getFileserverUrl(), this);
@@ -269,6 +273,21 @@ public abstract class RJA {
         return c;
     }
 
+    public Server cacheServer(JsonObject asJsonObject) {
+        Server s = Server.from(this, asJsonObject);
+        if(serverCache == null) return null; // Caching is disabled
+        if(s != null) {
+            if(serverCache.stream().anyMatch(server -> server.getId().equals(s.getId()))) {
+                serverCache.stream().filter(server -> server.getId().equals(s.getId())).findFirst().ifPresent(serverCache::remove); // Server is cached, remove old one
+            }
+            serverCache.add(s);
+            //getLogger().info("Loaded server " + s.getName()); // DEBUG
+        } else {
+            getLogger().warning("Failed to load server!");
+        }
+        return s;
+    }
+
     /**
      * Retrieves the User cache.
      * @return The user cache or null if the caching policy for {@link CachingPolicy#MEMBER} is disabled.
@@ -291,6 +310,10 @@ public abstract class RJA {
      */
     public Cache<GenericChannel> getChannelCache() {
         return channelCache;
+    }
+
+    public Cache<Server> getServerCache() {
+        return serverCache;
     }
 
     public RestAction<User> retrieveSelfUser() {

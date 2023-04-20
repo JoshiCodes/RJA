@@ -6,6 +6,8 @@ import de.joshicodes.rja.event.EventListener;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.event.message.MessageReceivedEvent;
 import de.joshicodes.rja.event.self.ReadyEvent;
+import de.joshicodes.rja.event.server.ServerCreateEvent;
+import de.joshicodes.rja.event.server.ServerDeleteEvent;
 import de.joshicodes.rja.object.user.UserStatus;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
@@ -219,8 +221,17 @@ public class RJABuilder {
         final Thread thread = Thread.currentThread();
 
         registerEvents(
+
+                // Self
                 new ReadyEvent(),
-                new MessageReceivedEvent()
+
+                // Message
+                new MessageReceivedEvent(),
+
+                // Server
+                new ServerCreateEvent(),
+                new ServerDeleteEvent()
+
         );
 
         final RequestHandler requestHandler = new RequestHandler(this, eventListeners, events);
