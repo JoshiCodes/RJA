@@ -42,7 +42,7 @@ public abstract class User {
 
         final String id = object.get("_id").getAsString();
         final String username = object.get("username").getAsString();
-        //final Avatar avatar = Avatar.from(object.get("avatar").getAsJsonObject());
+        final Avatar avatar = Avatar.from(object.get("avatar").getAsJsonObject());
         //final Relations relations = Relations.from(object.get("relations").getAsJsonObject());
         final int badges = JsonUtil.getInt(object, "badges", 0);
         final UserStatus status = UserStatus.from(JsonUtil.getObject(object, "status", null));
@@ -72,7 +72,7 @@ public abstract class User {
 
             @Override
             public Avatar getAvatar() {
-                return null;
+                return avatar;
             }
 
             @Override
