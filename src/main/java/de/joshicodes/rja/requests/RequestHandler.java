@@ -17,6 +17,8 @@ import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.HttpUtil;
 import de.joshicodes.rja.util.JsonUtil;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.exceptions.WebsocketNotConnectedException;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.lang.reflect.InvocationTargetException;
@@ -25,24 +27,27 @@ import java.lang.reflect.Parameter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
-public class RequestHandler extends WebSocketClient {
+public class RequestHandler {
 
     private Thread timerThread;
+    private RequestSocket socket;
 
-    private final RJABuilder rja;
+
+    final RJABuilder rja;
     private final List<EventListener> listeners;
     private final List<IncomingEvent> events;
 
     public RequestHandler(RJABuilder rja, List<EventListener> listeners, List<IncomingEvent> events) throws URISyntaxException {
-        super(new URI(rja.getWSUrl()));
         this.rja = rja;
         this.listeners = listeners;
         this.events = events;
         rja.getLogger().info("Connecting...");
+        this.socket = new RequestSocket(this);
     }
 
-    private void startTimer() {
+    void startTimer() {
         if(timerThread != null) {
             return;
         }
@@ -91,7 +96,15 @@ public class RequestHandler extends WebSocketClient {
                 jsonObject.addProperty(key, value.toString());
             }
         }
-        send(jsonObject.toString());
+        try {
+            socket.send(jsonObject.toString());
+        } catch (WebsocketNotConnectedException e) {
+            try {
+                tryConnect(5000, true);
+            } catch (InterruptedException | URISyntaxException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 
     public void fireEvent(final Event event) {
@@ -127,56 +140,7 @@ public class RequestHandler extends WebSocketClient {
         }
     }
 
-    @Override
-    public void onOpen(ServerHandshake serverHandshake) {
-        startTimer();
-        rja.getLogger().info("Connected to the Revolt API!");
-    }
-
-    @Override
-    public void onMessage(String s) {
-        //rja.getLogger().info("Received message: " + s);
-        if(!s.startsWith("{")) {
-            // Not a JSON object
-            return;
-        }
-        JsonElement element = JsonParser.parseString(s);
-        if(!element.isJsonObject()) {
-            // Not a JSON object
-            return;
-        }
-        JsonObject object = element.getAsJsonObject();
-        if(!object.has("type")) {
-            // No type
-            return;
-        }
-        RJA instance = rja.get();
-        if(instance == null) {
-            rja.getLogger().warning("Cannot handle incoming event, RJA instance is null!");
-            return;
-        }
-        String type = object.get("type").getAsString();
-        if(type.equals("Bulk")) {
-            JsonArray array = JsonUtil.getArray(object, "data", null);
-            if(array != null) {
-                for(JsonElement e : array) {
-                    if(!e.isJsonObject()) {
-                        continue;
-                    }
-                    JsonObject o = e.getAsJsonObject();
-                    if(!o.has("type")) {
-                        continue;
-                    }
-                    String t = o.get("type").getAsString();
-                    handleIncoming(instance, t, o);
-                }
-                return;
-            }
-        }
-        handleIncoming(instance, type, object);
-    }
-
-    private void handleIncoming(RJA instance, String type, JsonObject object) {
+    void handleIncoming(RJA instance, String type, JsonObject object) {
         for(IncomingEvent event : events) {
             if(event.getType().equals(type)) {
                 IncomingEvent e = event.handle(instance, object);
@@ -186,14 +150,53 @@ public class RequestHandler extends WebSocketClient {
         }
     }
 
-    @Override
-    public void onClose(int i, String s, boolean b) {
-
+    public RequestSocket getSocket() {
+        return socket;
     }
 
-    @Override
-    public void onError(Exception e) {
+    void onClose(int i, String s, boolean b) {
+        int[] toReconnect = new int[] {
+                CloseFrame.ABNORMAL_CLOSE,
+                CloseFrame.GOING_AWAY,
+                CloseFrame.REFUSE,
+                CloseFrame.TLS_ERROR,
+                CloseFrame.UNEXPECTED_CONDITION
+        };
+        if(Arrays.stream(toReconnect).anyMatch(x -> x == i)) {
+            rja.getLogger().info("Disconnected from the Revolt API, reconnecting...");
+            try {
+                tryConnect(5000, true);
+            } catch (InterruptedException | URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
+    public void tryConnect(int timeout, boolean retry) throws InterruptedException, URISyntaxException {
+        if(!socket.isClosed())
+            socket.close(CloseFrame.NORMAL);
+        socket = new RequestSocket(this);
+        try {
+            socket.connectBlocking(timeout, TimeUnit.MILLISECONDS);
+            if(socket.isOpen()) {
+                rja.getLogger().info("Connected to the Revolt API!");
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if(retry) {
+                rja.getLogger().warning("Failed to connect to the Revolt API, retrying in " + (timeout / 1000) + " seconds...");
+                try {
+                    Thread.sleep(timeout);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+                tryConnect(timeout, true);
+            } else {
+                rja.getLogger().warning("Failed to connect to the Revolt API!");
+                e.printStackTrace();
+            }
+        }
     }
 
 }

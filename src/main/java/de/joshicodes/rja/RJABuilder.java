@@ -269,7 +269,7 @@ public class RJABuilder {
             @Override
             public void run() {
                 try {
-                    requestHandler.connectBlocking();
+                    requestHandler.getSocket().connectBlocking();
                     ready.set(true);
                     if(cleanStatus && status == null) {
                         rja.editSelfUser().setStatus("", UserStatus.Presence.ONLINE).queue();
