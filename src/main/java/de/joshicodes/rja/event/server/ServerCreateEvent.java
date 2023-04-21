@@ -31,7 +31,7 @@ public class ServerCreateEvent extends IncomingEvent {
         if(!object.has("server")) return null;
         JsonObject serverObject = object.getAsJsonObject("server");
         if(serverObject == null) return null;
-        Server server = rja.cacheServer(serverObject);
+        Server server = rja.cacheServer(Server.from(rja, serverObject));
         if(server == null) return null;
         return new ServerCreateEvent(rja, server);
     }

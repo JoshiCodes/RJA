@@ -291,19 +291,18 @@ public abstract class RJA {
         return c;
     }
 
-    public Server cacheServer(JsonObject asJsonObject) {
-        Server s = Server.from(this, asJsonObject);
+    public Server cacheServer(Server cachedServer) {
         if(serverCache == null) return null; // Caching is disabled
-        if(s != null) {
-            if(serverCache.stream().anyMatch(server -> server.getId().equals(s.getId()))) {
-                serverCache.stream().filter(server -> server.getId().equals(s.getId())).findFirst().ifPresent(serverCache::remove); // Server is cached, remove old one
+        if(cachedServer != null) {
+            if(serverCache.stream().anyMatch(server -> server.getId().equals(cachedServer.getId()))) {
+                serverCache.stream().filter(server -> server.getId().equals(cachedServer.getId())).findFirst().ifPresent(serverCache::remove); // Server is cached, remove old one
             }
-            serverCache.add(s);
+            serverCache.add(cachedServer);
             //getLogger().info("Loaded server " + s.getName()); // DEBUG
         } else {
             getLogger().warning("Failed to load server!");
         }
-        return s;
+        return cachedServer;
     }
 
     /**

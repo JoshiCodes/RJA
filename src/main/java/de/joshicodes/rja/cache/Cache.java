@@ -59,4 +59,8 @@ public class Cache<T> {
         return false;
     }
 
+    public boolean containsIf(Predicate<T> predicate) {
+        return list.keySet().stream().anyMatch(predicate);
+    }
+
 }

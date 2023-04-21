@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
+import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.rest.RestAction;
 
@@ -41,7 +42,7 @@ public class ReadyEvent extends IncomingEvent {
         JsonArray servers = object.get("servers").getAsJsonArray();
         for(JsonElement server : servers) {
             if(!server.isJsonObject()) continue;
-            rja.cacheServer(server.getAsJsonObject());
+            rja.cacheServer(Server.from(rja, server.getAsJsonObject()));
         }
         JsonArray channels = object.get("channels").getAsJsonArray();
         for(JsonElement channel : channels) {
