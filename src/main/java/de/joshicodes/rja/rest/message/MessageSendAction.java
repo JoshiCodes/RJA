@@ -3,6 +3,8 @@ package de.joshicodes.rja.rest.message;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
+import de.joshicodes.rja.constants.RestLimits;
+import de.joshicodes.rja.object.Attachment;
 import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
@@ -18,7 +20,7 @@ public class MessageSendAction extends RestAction<Message> {
     private final String receiver;
 
     private String content;
-    private List<String> attachments;
+    private List<Attachment> attachments;
     private HashMap<String, Boolean> replies;
     private List<MessageEmbed> embeds;
     private Masquerade masquerade;
@@ -34,7 +36,7 @@ public class MessageSendAction extends RestAction<Message> {
         return this;
     }
 
-    public MessageSendAction setAttachments(List<String> attachments) {
+    public MessageSendAction setAttachments(List<Attachment> attachments) {
         this.attachments = attachments;
         return this;
     }
@@ -65,13 +67,17 @@ public class MessageSendAction extends RestAction<Message> {
     protected Message execute() {
 
         MessageSendRequest request = new MessageSendRequest(receiver);
-        if(content != null)
-            request.addData("content", content);
+        if(content != null) {
+            if(content.length() > RestLimits.MAX_MESSAGE_LENGTH)
+                throw new IllegalArgumentException("Message content is too long!");
 
-        if(attachments != null) {
+            request.addData("content", content);
+        }
+
+        if(attachments != null && attachments.size() <= RestLimits.MAX_ATTACHMENTS) {
             JsonArray attachments = new JsonArray();
-            for(String attachment : this.attachments) {
-                attachments.add(attachment);
+            for(Attachment attachment : this.attachments) {
+                attachments.add(attachment.getId());
             }
             request.addData("attachments", attachments);
         }
@@ -87,7 +93,7 @@ public class MessageSendAction extends RestAction<Message> {
             request.addData("replies", replies);
         }
 
-        if(embeds != null) {
+        if(embeds != null && embeds.size() <= RestLimits.MAX_EMBEDS) {
             JsonArray embeds = new JsonArray();
             for(MessageEmbed embed : this.embeds) {
                 embeds.add(embed.toJson());
@@ -99,9 +105,9 @@ public class MessageSendAction extends RestAction<Message> {
             request.addData("masquerade", masquerade.toJson());
         }
 
-        UUID nonce = UUID.randomUUID();
+        String nonce = UUID.randomUUID().toString();
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("Idempotency-Key", nonce.toString());
+        headers.put("Idempotency-Key", nonce);
         request.setHeaders(headers);
 
         return getRJA().getRequestHandler().sendRequest(getRJA(), request);
