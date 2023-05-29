@@ -7,7 +7,6 @@ import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.object.user.UserStatus;
 
 import java.net.URISyntaxException;
-import java.util.logging.Level;
 
 public class SimpleExample {
 
