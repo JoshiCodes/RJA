@@ -1,6 +1,7 @@
 package de.joshicodes.rja.rest.message;
 
 import de.joshicodes.rja.RJA;
+import de.joshicodes.rja.object.Attachment;
 import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.requests.rest.message.EditMessageRequest;
@@ -15,6 +16,8 @@ public class MessageEditAction extends RestAction<Message> {
 
     private String content;
     private List<MessageEmbed> embeds;
+
+    private List<Attachment> attachments;
 
     public MessageEditAction(final RJA rja, final Message message) {
         super(rja);
@@ -42,9 +45,25 @@ public class MessageEditAction extends RestAction<Message> {
         return this;
     }
 
+    public MessageEditAction setAttachments(Attachment... attachments) {
+        this.attachments = List.of(attachments);
+        return this;
+    }
+
+    public MessageEditAction setAttachments(List<Attachment> attachments) {
+        this.attachments = attachments;
+        return this;
+    }
+
+    public MessageEditAction addAttachment(Attachment attachment) {
+        if(attachments == null) attachments = new ArrayList<>();
+        attachments.add(attachment);
+        return this;
+    }
+
     @Override
     protected Message execute() {
-        EditMessageRequest request = new EditMessageRequest(message, content, embeds);
+        EditMessageRequest request = new EditMessageRequest(message, content, embeds, attachments);
         if(!request.hasData() || (!request.hasData("content") && !request.hasData("embeds"))) {
             return message; // Nothing to edit, return original message
         }

@@ -1,9 +1,7 @@
 package de.joshicodes.rja.requests;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.RJABuilder;
 import de.joshicodes.rja.event.Event;
@@ -14,17 +12,12 @@ import de.joshicodes.rja.requests.packet.PacketRequest;
 import de.joshicodes.rja.requests.packet.PingRequest;
 import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.rest.RestAction;
-import de.joshicodes.rja.util.HttpUtil;
-import de.joshicodes.rja.util.JsonUtil;
-import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.framing.CloseFrame;
-import org.java_websocket.handshake.ServerHandshake;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;

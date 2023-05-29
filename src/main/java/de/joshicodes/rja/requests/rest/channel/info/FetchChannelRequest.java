@@ -1,7 +1,6 @@
 package de.joshicodes.rja.requests.rest.channel.info;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.requests.rest.RestRequest;

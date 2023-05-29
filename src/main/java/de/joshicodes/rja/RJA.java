@@ -2,24 +2,25 @@ package de.joshicodes.rja;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.cache.Cache;
+import de.joshicodes.rja.cache.CacheMap;
 import de.joshicodes.rja.exception.InvalidChannelTypeException;
 import de.joshicodes.rja.exception.RJAPingException;
 import de.joshicodes.rja.object.Attachment;
 import de.joshicodes.rja.object.InputFile;
 import de.joshicodes.rja.object.channel.ChannelType;
 import de.joshicodes.rja.object.channel.DirectChannel;
+import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.channel.TextChannel;
+import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
-import de.joshicodes.rja.object.channel.GenericChannel;
-import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.file.FileHandler;
+import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.message.FetchMessageRequest;
 import de.joshicodes.rja.requests.rest.server.FetchServerRequest;
 import de.joshicodes.rja.requests.rest.user.FetchUserRequest;
-import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.user.OpenDirectMessageRequest;
 import de.joshicodes.rja.requests.rest.user.self.FetchSelfRequest;
 import de.joshicodes.rja.rest.EditSelfRestAction;
@@ -44,8 +45,8 @@ import java.util.logging.Logger;
  */
 public abstract class RJA {
 
-    private final Cache<User> userCache;
-    private final Cache<Message> messageCache;
+    private final CacheMap<String, User> userCache;
+    private final CacheMap<String, Message> messageCache;
     private final Cache<GenericChannel> channelCache;
     private final Cache<Server> serverCache;
 
@@ -53,10 +54,10 @@ public abstract class RJA {
 
     RJA(RJABuilder builder, List<CachingPolicy> cachingPolicies) {
 
-        if(cachingPolicies.contains(CachingPolicy.MEMBER)) userCache = new Cache<>();
+        if(cachingPolicies.contains(CachingPolicy.MEMBER)) userCache = new CacheMap<>();
         else userCache = null;
 
-        if(cachingPolicies.contains(CachingPolicy.MESSAGE)) messageCache = new Cache<>();
+        if(cachingPolicies.contains(CachingPolicy.MESSAGE)) messageCache = new CacheMap<>();
         else messageCache = null;
 
         if(cachingPolicies.contains(CachingPolicy.SERVER)) {
@@ -74,6 +75,8 @@ public abstract class RJA {
     abstract public Logger getLogger();
 
     abstract public String getApiUrl();
+    abstract public String getFileserverUrl();
+
     abstract public RequestHandler getRequestHandler();
     abstract public Thread mainThread();
 
@@ -150,8 +153,8 @@ public abstract class RJA {
             public User execute() {
                 if(userCache != null) {
                     // Caching for User is enabled
-                    User u = userCache.stream().filter(user -> user.getId().equals(id)).findFirst().orElse(null);
-                    if(u != null) return u;
+                    User user = userCache.get(id);
+                    if(user != null) return user;
                 }
                 // Caching is disabled or user is not found in cache
                 FetchUserRequest request = new FetchUserRequest(id);
@@ -173,8 +176,9 @@ public abstract class RJA {
             @Override
             public Message execute() {
                 if(messageCache != null) {
-                    Message msg = messageCache.stream().filter(message -> message.getId().equals(id)).findFirst().orElse(null);
-                    if(msg != null) return msg;
+                    // Caching for Message is enabled
+                    Message message = messageCache.get(id);
+                    if(message != null) return message;
                 }
                 // Message is not in cache or caching is disabled
                 FetchMessageRequest request = new FetchMessageRequest(channel, id);
@@ -256,20 +260,14 @@ public abstract class RJA {
 
     public void cacheMessage(Message message) {
         if(messageCache == null) return; // Caching is disabled
-        if(messageCache.stream().anyMatch(msg -> msg.getId().equals(message.getId()))) {
-            messageCache.stream().filter(msg -> msg.getId().equals(message.getId())).findFirst().ifPresent(messageCache::remove); // Message is cached, remove old one
-        }
-        messageCache.add(message);
+        messageCache.put(message.getId(), message);
     }
 
     public void cacheUser(JsonObject user) {
         if(userCache == null) return; // Caching is disabled
         User u = User.from(this, user);
         if(u != null) {
-            if(userCache.stream().anyMatch(usr -> usr.getId().equals(u.getId()))) {
-                userCache.stream().filter(usr -> usr.getId().equals(u.getId())).findFirst().ifPresent(userCache::remove); // User is cached, remove old one
-            }
-            userCache.add(u);
+            userCache.put(u.getId(), u);
             //getLogger().info("Loaded user " + u.getUsername()); // DEBUG
         } else {
             getLogger().warning("Failed to load user!");
@@ -309,7 +307,7 @@ public abstract class RJA {
      * Retrieves the User cache.
      * @return The user cache or null if the caching policy for {@link CachingPolicy#MEMBER} is disabled.
      */
-    public Cache<User> getUserCache() {
+    public CacheMap<String, User> getUserCache() {
         return userCache;
     }
 
@@ -317,7 +315,7 @@ public abstract class RJA {
      * Retrieves the Message cache.
      * @return The message cache or null if the caching policy for {@link CachingPolicy#MESSAGE} is disabled.
      */
-    public Cache<Message> getMessageCache() {
+    public CacheMap<String, Message> getMessageCache() {
         return messageCache;
     }
 

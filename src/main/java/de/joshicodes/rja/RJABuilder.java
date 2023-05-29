@@ -8,8 +8,8 @@ import de.joshicodes.rja.event.message.MessageReceivedEvent;
 import de.joshicodes.rja.event.self.ReadyEvent;
 import de.joshicodes.rja.event.server.ServerCreateEvent;
 import de.joshicodes.rja.event.server.ServerDeleteEvent;
-import de.joshicodes.rja.object.user.UserStatus;
 import de.joshicodes.rja.object.enums.CachingPolicy;
+import de.joshicodes.rja.object.user.UserStatus;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.util.HttpUtil;
@@ -235,6 +235,7 @@ public class RJABuilder {
         );
 
         final RequestHandler requestHandler = new RequestHandler(this, eventListeners, events);
+        final String fileserverUrl = getFileserverUrl();
         AtomicBoolean ready = new AtomicBoolean(false);
         final RJA rja = new RJA(this, cachingPolicies) {
 
@@ -246,6 +247,11 @@ public class RJABuilder {
             @Override
             public String getApiUrl() {
                 return apiUrl;
+            }
+
+            @Override
+            public String getFileserverUrl() {
+                return fileserverUrl;
             }
 
             @Override

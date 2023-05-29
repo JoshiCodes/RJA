@@ -3,7 +3,6 @@ package de.joshicodes.rja.event.server;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
-import de.joshicodes.rja.object.channel.ServerChannel;
 import de.joshicodes.rja.object.server.Server;
 
 /**

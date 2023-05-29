@@ -1,11 +1,12 @@
-package de.joshicodes.rja.object;
+package de.joshicodes.rja.object.user;
 
 import com.google.gson.JsonObject;
+import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.util.JsonUtil;
 
 public abstract class Avatar {
 
-    public static Avatar from(JsonObject object) {
+    public static Avatar from(final RJA rja, JsonObject object) {
         if(object == null) return null;
         if(!object.has("_id")) return null;
         final String id = object.get("_id").getAsString();
@@ -23,6 +24,12 @@ public abstract class Avatar {
         final String objectId = JsonUtil.getString(object, "object_id", null);
 
         return new Avatar() {
+
+            @Override
+            public RJA getRJA() {
+                return rja;
+            }
+
             @Override
             public String getId() {
                 return id;
@@ -86,6 +93,8 @@ public abstract class Avatar {
 
     }
 
+    abstract public RJA getRJA();
+
     abstract public String getId();
     abstract public String getTag();
     abstract public String getFileName();
@@ -101,5 +110,13 @@ public abstract class Avatar {
     abstract public String getUserId();
     abstract public String getServerId();
     abstract public String getObjectId();
+
+    public String getURL() {
+        return getURL(0);
+    }
+
+    public String getURL(int size) {
+        return getRJA().getFileserverUrl() + "/avatars/" + getId() + (size > 0 ? "?size=" + size : "");
+    }
 
 }

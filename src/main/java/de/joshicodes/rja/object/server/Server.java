@@ -34,6 +34,9 @@ public class Server {
         server.name = name;
         server.description = description;
         server.channels = channels;
+
+        server.icon = new Icon(rja, server, JsonUtil.getObject(object, "icon", null));
+
         return server;
 
     }
@@ -45,6 +48,8 @@ public class Server {
     private String name;
     private String description;
     private List<String> channels;
+
+    private Icon icon;
 
     Server(final RJA rja, final String id, final String owner) {
         this.rja = rja;
@@ -112,6 +117,112 @@ public class Server {
                     }
                 }
             }
+        }
+
+    }
+
+    public Icon getIcon() {
+        return icon;
+    }
+
+    public static class Icon {
+
+        private final RJA rja;
+        private final Server server;
+        private final JsonObject object;
+
+        private final String id;
+        private final String tag;
+        private final String filename;
+
+        private final String contentType;
+        private final int size;
+        private final boolean deleted;
+        private final boolean reported;
+
+        private final String messageId;
+        private final String userId;
+        private final String serverId;
+        private final String objectId;
+
+        Icon(RJA rja, Server server, JsonObject object) {
+            this.rja = rja;
+            this.server = server;
+            this.object = object;
+
+            this.id = JsonUtil.getString(object, "_id", null);
+            this.tag = JsonUtil.getString(object, "tag", null);
+            this.filename = JsonUtil.getString(object, "filename", null);
+            // metadata here
+            this.contentType = JsonUtil.getString(object, "content_type", null);
+            this.size = JsonUtil.getInt(object, "size", 0);
+            this.deleted = JsonUtil.getBoolean(object, "deleted", false);
+            this.reported = JsonUtil.getBoolean(object, "reported", false);
+            this.messageId = JsonUtil.getString(object, "message_id", null);
+            this.userId = JsonUtil.getString(object, "user_id", null);
+            this.serverId = JsonUtil.getString(object, "server_id", null);
+            this.objectId = JsonUtil.getString(object, "object_id", null);
+
+        }
+
+        public RJA getRJA() {
+            return rja;
+        }
+
+        public Server getServer() {
+            return server;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public String getFilename() {
+            return filename;
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public boolean isDeleted() {
+            return deleted;
+        }
+
+        public boolean isReported() {
+            return reported;
+        }
+
+        public String getMessageId() {
+            return messageId;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public String getServerId() {
+            return serverId;
+        }
+
+        public String getObjectId() {
+            return objectId;
+        }
+
+        public String getURL() {
+            return getURL(0);
+        }
+
+        public String getURL(int size) {
+            return getRJA().getFileserverUrl() + "/icons/" + getId() + (size > 0 ? "?size=" + size : "");
         }
 
     }

@@ -8,4 +8,6 @@ public abstract class UserProfile {
         return null;
     }
 
+    // TODO: Implement - "content" and "background"
+
 }

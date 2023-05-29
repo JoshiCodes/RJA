@@ -2,11 +2,8 @@ package de.joshicodes.rja.object.user;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
-import de.joshicodes.rja.object.Avatar;
 import de.joshicodes.rja.object.channel.DirectChannel;
-import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.enums.RelationShip;
-import de.joshicodes.rja.object.message.MessageReceiver;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
@@ -42,7 +39,7 @@ public abstract class User {
 
         final String id = object.get("_id").getAsString();
         final String username = object.get("username").getAsString();
-        final Avatar avatar = Avatar.from(object.get("avatar").getAsJsonObject());
+        final Avatar avatar = Avatar.from(rja, object.get("avatar").getAsJsonObject());
         //final Relations relations = Relations.from(object.get("relations").getAsJsonObject());
         final int badges = JsonUtil.getInt(object, "badges", 0);
         final UserStatus status = UserStatus.from(JsonUtil.getObject(object, "status", null));

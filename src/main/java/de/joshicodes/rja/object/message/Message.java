@@ -7,9 +7,9 @@ import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
 import de.joshicodes.rja.object.user.User;
+import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.rest.message.MessageEditAction;
 import de.joshicodes.rja.rest.message.MessageSendAction;
-import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
 import java.util.ArrayList;

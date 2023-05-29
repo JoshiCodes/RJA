@@ -8,13 +8,10 @@ import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.RJABuilder;
 import de.joshicodes.rja.util.JsonUtil;
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 public class RequestSocket extends WebSocketClient {
 
