@@ -4,6 +4,7 @@ import de.joshicodes.rja.util.MultiObject;
 import de.joshicodes.rja.util.TrippleMap;
 
 import java.util.HashMap;
+import java.util.function.Predicate;
 
 public class CacheMap<K, T> {
 
@@ -14,7 +15,7 @@ public class CacheMap<K, T> {
     }
 
     public void put(K key, T t) {
-        map.put(key, t, Cache.DEFAULT_LIFESPAN);
+        put(key, t, Cache.DEFAULT_LIFESPAN);
     }
 
     public void put(K key, T t, long lifespan) {
@@ -49,6 +50,14 @@ public class CacheMap<K, T> {
 
     public boolean containsSecond(K key, Long lifespan) {
         return map.containsSecond(key, lifespan);
+    }
+
+    public boolean containsIf(Predicate<K> predicate) {
+        return map.getMap().keySet().stream().anyMatch(predicate);
+    }
+
+    public T getIf(Predicate<K> predicate) {
+        return map.getMap().entrySet().stream().filter(entry -> predicate.test(entry.getKey())).findFirst().map(entry -> entry.getValue().getFirst()).orElse(null);
     }
 
     public void clear() {
