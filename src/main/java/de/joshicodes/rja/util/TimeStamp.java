@@ -46,7 +46,7 @@ public class TimeStamp {
      */
     public static String format(long time, Format format) {
 
-        if(time <= 0) time = System.currentTimeMillis();
+        if(time <= 0) time = System.currentTimeMillis() / 1000;
 
         StringBuilder builder = new StringBuilder();
         builder.append("<t:");
