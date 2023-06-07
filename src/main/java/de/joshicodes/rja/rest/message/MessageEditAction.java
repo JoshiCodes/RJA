@@ -63,6 +63,11 @@ public class MessageEditAction extends RestAction<Message> {
 
     @Override
     protected Message execute() {
+
+        if(!message.getAuthorId().equals(getRJA().retrieveSelfUser().complete().getId())) {
+            throw new UnsupportedOperationException("Cannot edit a message that was not sent by the current user!");
+        }
+
         EditMessageRequest request = new EditMessageRequest(message, content, embeds, attachments);
         if(!request.hasData() || (!request.hasData("content") && !request.hasData("embeds"))) {
             return message; // Nothing to edit, return original message
