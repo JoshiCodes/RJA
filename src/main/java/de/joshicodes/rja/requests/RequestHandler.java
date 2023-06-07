@@ -12,6 +12,7 @@ import de.joshicodes.rja.requests.packet.PacketRequest;
 import de.joshicodes.rja.requests.packet.PingRequest;
 import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.util.MultiObject;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.framing.CloseFrame;
 
@@ -67,11 +68,13 @@ public class RequestHandler {
      */
     public <T> T sendRequest(final RJA rja, RestRequest<T> request) {
         final RJABuilder builder = this.rja;
-        JsonElement e = builder.makeRequest(request);
-        if(e == null) {
+        MultiObject<Integer, JsonElement> multi = builder.makeRequest(request);
+        JsonElement e = multi.getSecond();
+        int code = multi.getFirst();
+        if(e == null && (code < 200 || code >= 300)) {
             return null;
         }
-        return request.fetch(rja, e);
+        return request.fetch(rja, multi.getFirst(), e);
     }
 
     public void sendRequest(PacketRequest request) {

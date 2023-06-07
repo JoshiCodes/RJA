@@ -5,6 +5,9 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.event.EventListener;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.event.message.MessageReceivedEvent;
+import de.joshicodes.rja.event.message.MessageUpdateEvent;
+import de.joshicodes.rja.event.message.reaction.MessageReactEvent;
+import de.joshicodes.rja.event.message.reaction.MessageUnreactEvent;
 import de.joshicodes.rja.event.self.ReadyEvent;
 import de.joshicodes.rja.event.server.ServerCreateEvent;
 import de.joshicodes.rja.event.server.ServerDeleteEvent;
@@ -14,6 +17,7 @@ import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.util.HttpUtil;
 import de.joshicodes.rja.util.JsonUtil;
+import de.joshicodes.rja.util.MultiObject;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -227,6 +231,11 @@ public class RJABuilder {
 
                 // Message
                 new MessageReceivedEvent(),
+                new MessageUpdateEvent(),
+
+                // Interaction
+                new MessageReactEvent(),
+                new MessageUnreactEvent(),
 
                 // Server
                 new ServerCreateEvent(),
@@ -295,7 +304,7 @@ public class RJABuilder {
 
     }
 
-    public <T> JsonElement makeRequest(RestRequest<T> request) {
+    public <T> MultiObject<Integer, JsonElement> makeRequest(RestRequest<T> request) {
         try {
             return HttpUtil.sendRequest(
                     apiUrl + request.getEndpoint(),

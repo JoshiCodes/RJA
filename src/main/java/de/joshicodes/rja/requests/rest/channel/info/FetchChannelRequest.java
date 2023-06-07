@@ -12,7 +12,7 @@ public class FetchChannelRequest extends RestRequest<GenericChannel> {
     }
 
     @Override
-    public GenericChannel fetch(RJA rja, JsonElement data) {
+    public GenericChannel fetch(RJA rja, int responseCode, JsonElement data) {
         if(!data.isJsonObject())
             return null;
         return rja.cacheChannel(data.getAsJsonObject());

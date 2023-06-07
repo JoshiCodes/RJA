@@ -6,6 +6,7 @@ import de.joshicodes.rja.cache.CacheMap;
 import de.joshicodes.rja.exception.InvalidChannelTypeException;
 import de.joshicodes.rja.exception.RJAPingException;
 import de.joshicodes.rja.object.Attachment;
+import de.joshicodes.rja.object.Emoji;
 import de.joshicodes.rja.object.InputFile;
 import de.joshicodes.rja.object.channel.ChannelType;
 import de.joshicodes.rja.object.channel.DirectChannel;
@@ -17,6 +18,7 @@ import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.file.FileHandler;
+import de.joshicodes.rja.requests.rest.interaction.FetchEmojiRequest;
 import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.message.FetchMessageRequest;
 import de.joshicodes.rja.requests.rest.server.FetchServerRequest;
@@ -47,6 +49,7 @@ public abstract class RJA {
 
     private final CacheMap<String, User> userCache;
     private final CacheMap<String, Message> messageCache;
+    private final CacheMap<String, Emoji> emojiCache;
     private final Cache<GenericChannel> channelCache;
     private final Cache<Server> serverCache;
 
@@ -59,6 +62,9 @@ public abstract class RJA {
 
         if(cachingPolicies.contains(CachingPolicy.MESSAGE)) messageCache = new CacheMap<>();
         else messageCache = null;
+
+        if(cachingPolicies.contains(CachingPolicy.EMOJI)) emojiCache = new CacheMap<>();
+        else emojiCache = null;
 
         if(cachingPolicies.contains(CachingPolicy.SERVER)) {
             channelCache = new Cache<>();
@@ -153,8 +159,9 @@ public abstract class RJA {
             public User execute() {
                 if(userCache != null) {
                     // Caching for User is enabled
-                    User user = userCache.get(id);
-                    if(user != null) return user;
+                    if(userCache.containsKey(id)) {
+                        return userCache.get(id);
+                    }
                 }
                 // Caching is disabled or user is not found in cache
                 FetchUserRequest request = new FetchUserRequest(id);
@@ -177,11 +184,30 @@ public abstract class RJA {
             public Message execute() {
                 if(messageCache != null) {
                     // Caching for Message is enabled
-                    Message message = messageCache.get(id);
-                    if(message != null) return message;
+                    if(messageCache.containsKey(id)) {
+                        return messageCache.get(id);
+                    }
                 }
                 // Message is not in cache or caching is disabled
                 FetchMessageRequest request = new FetchMessageRequest(channel, id);
+                return getRequestHandler().sendRequest(RJA.this, request);
+            }
+        };
+    }
+
+    public RestAction<Emoji> retrieveEmoji(String id) {
+        return new RestAction<>(this) {
+            @Override
+            public Emoji execute() {
+                if(emojiCache != null) {
+                    // Caching for Emoji is enabled
+                    if(emojiCache.containsKey(id)) {
+                        Emoji emoji = emojiCache.get(id);
+                        if(emoji != null) return emoji;
+                    }
+                }
+                // Emoji is not in cache or caching is disabled
+                FetchEmojiRequest request = new FetchEmojiRequest(id);
                 return getRequestHandler().sendRequest(RJA.this, request);
             }
         };
@@ -263,6 +289,12 @@ public abstract class RJA {
         messageCache.put(message.getId(), message);
     }
 
+    public void cacheEmoji(Emoji emoji) {
+        if(emoji == null) return;
+        if(emojiCache == null) return; // Caching is disabled
+        emojiCache.put(emoji.getId(), emoji);
+    }
+
     public void cacheUser(JsonObject user) {
         if(userCache == null) return; // Caching is disabled
         User u = User.from(this, user);
@@ -276,17 +308,21 @@ public abstract class RJA {
 
     public GenericChannel cacheChannel(JsonObject channel) {
         GenericChannel c = GenericChannel.from(this, channel);
-        if(channelCache == null) return c; // Caching is disabled
-        if(c != null) {
-            if(channelCache.stream().anyMatch(ch -> ch.getId().equals(c.getId()))) {
-                channelCache.stream().filter(ch -> ch.getId().equals(c.getId())).findFirst().ifPresent(channelCache::remove); // Channel is cached, remove old one
+        return cacheChannel(c);
+    }
+
+    public GenericChannel cacheChannel(GenericChannel channel) {
+        if(channelCache == null) return channel; // Caching is disabled
+        if(channel != null) {
+            if(channelCache.stream().anyMatch(ch -> ch.getId().equals(channel.getId()))) {
+                channelCache.stream().filter(ch -> ch.getId().equals(channel.getId())).findFirst().ifPresent(channelCache::remove); // Channel is cached, remove old one
             }
-            channelCache.add(c);
+            channelCache.add(channel);
             //getLogger().info("Loaded channel " + c.getName()); // DEBUG
         } else {
             getLogger().warning("Failed to load channel!");
         }
-        return c;
+        return channel;
     }
 
     public Server cacheServer(Server cachedServer) {
@@ -317,6 +353,14 @@ public abstract class RJA {
      */
     public CacheMap<String, Message> getMessageCache() {
         return messageCache;
+    }
+
+    /**
+     * Retrieves the Emoji cache.
+     * @return The emoji cache or null if the caching policy for {@link CachingPolicy#EMOJI} is disabled.
+     */
+    public CacheMap<String, Emoji> getEmojiCache() {
+        return emojiCache;
     }
 
     /**

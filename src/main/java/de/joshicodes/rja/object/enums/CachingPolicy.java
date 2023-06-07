@@ -26,6 +26,6 @@ public enum CachingPolicy {
      * Caches the emote objects.
      * Not implemented yet, will have no effect.
      */
-    EMOTES,
+    EMOJI,
 
 }

@@ -71,7 +71,7 @@ public abstract class RestRequest<T> {
         this.headers = headers;
     }
 
-    public abstract T fetch(RJA rja, JsonElement data);
+    public abstract T fetch(RJA rja, int statusCode, JsonElement data);
 
     public String getMethod() {
         return method;

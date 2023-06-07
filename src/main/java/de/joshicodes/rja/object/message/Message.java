@@ -3,10 +3,12 @@ package de.joshicodes.rja.object.message;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
+import de.joshicodes.rja.object.Emoji;
 import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
 import de.joshicodes.rja.object.user.User;
+import de.joshicodes.rja.requests.rest.interaction.AddReactionRequest;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.rest.message.MessageEditAction;
 import de.joshicodes.rja.rest.message.MessageSendAction;
@@ -17,22 +19,22 @@ import java.util.List;
 
 public abstract class Message {
 
-    public static Message from(RJA rja, JsonObject object) {
+    public static Message from(RJA rja, JsonObject object, Message message) {
 
         if(object == null) return null;
         if(!object.has("_id")) {
             return null;
         }
 
-        final String id = object.get("_id").getAsString();
-        final String nonce = JsonUtil.getString(object, "nonce", null);
-        final String channel = JsonUtil.getString(object, "channel", null);
-        final String author = JsonUtil.getString(object, "author", null);
-        final String content = JsonUtil.getString(object, "content", null);
-        final String system = JsonUtil.getString(object, "system", null);
+        final String id = JsonUtil.getString(object, "_id", message != null ? message.getId() : null);
+        final String nonce = JsonUtil.getString(object, "nonce", message != null ? message.getNonce() : null);
+        final String channel = JsonUtil.getString(object, "channel", message != null ? message.getChannelId() : null);
+        final String author = JsonUtil.getString(object, "author", message != null ? message.getAuthorId() : null);
+        final String content = JsonUtil.getString(object, "content", message != null ? message.getContent() : null);
+        final String system = JsonUtil.getString(object, "system", message != null ? message.systemMessage() : null);
         final boolean isSystem = system != null;
         // TODO: attachments
-        final String edited = JsonUtil.getString(object, "edited", null);
+        final String edited = JsonUtil.getString(object, "edited", message != null ? message.getEditedTimestamp() : null);
         final List<MessageEmbed> embeds;
         if(object.has("embeds")) {
             embeds = new ArrayList<>();
@@ -42,6 +44,8 @@ public abstract class Message {
                     embeds.add(embed);
                 }
             }
+        } else if(message != null) {
+            embeds = message.getEmbeds();
         } else embeds = null;
 
         final List<String> mentions;
@@ -50,6 +54,8 @@ public abstract class Message {
             for(JsonElement element : object.get("mentions").getAsJsonArray()) {
                 mentions.add(element.getAsString());
             }
+        } else if (message != null) {
+            mentions = message.getMentions();
         } else mentions = null;
 
         final List<String> replies;
@@ -58,11 +64,17 @@ public abstract class Message {
             for(JsonElement element : object.get("replies").getAsJsonArray()) {
                 replies.add(element.getAsString());
             }
+        } else if (message != null) {
+            replies = message.getReplies();
         } else replies = null;
 
         // TODO: reactions, interactions
 
-        final Masquerade masquerade = Masquerade.from(rja, object);
+        Masquerade m = Masquerade.from(rja, object);
+        final Masquerade masquerade;
+        if(m == null && message != null) {
+            masquerade = message.getMasquerade();
+        } else masquerade = m;
 
         return new Message() {
 
@@ -195,6 +207,21 @@ public abstract class Message {
 
     public MessageEditAction edit(final MessageEmbed... embeds) {
         return new MessageEditAction(getRJA(), this).setEmbeds(embeds);
+    }
+
+    public RestAction<Void> react(Emoji emoji) {
+        return react(emoji.getId());
+    }
+
+    public RestAction<Void> react(String emoji) {
+        return new RestAction<>(getRJA()) {
+            @Override
+            protected Void execute() {
+                AddReactionRequest request = new AddReactionRequest(getChannelId(), getId(), emoji);
+                getRJA().getRequestHandler().sendRequest(getRJA(), request);
+                return null;
+            }
+        };
     }
 
 }

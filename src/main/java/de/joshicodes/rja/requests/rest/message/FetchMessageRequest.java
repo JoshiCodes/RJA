@@ -12,10 +12,10 @@ public class FetchMessageRequest extends RestRequest<Message> {
     }
 
     @Override
-    public Message fetch(RJA rja, JsonElement data) {
+    public Message fetch(RJA rja, int responseCode, JsonElement data) {
         if (!data.isJsonObject())
             return null;
-        return Message.from(rja, data.getAsJsonObject());
+        return Message.from(rja, data.getAsJsonObject(), null);
     }
 
 }

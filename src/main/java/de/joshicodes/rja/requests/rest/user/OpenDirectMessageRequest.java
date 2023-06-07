@@ -12,10 +12,12 @@ public class OpenDirectMessageRequest extends RestRequest<DirectChannel> {
     }
 
     @Override
-    public DirectChannel fetch(RJA rja, JsonElement data) {
+    public DirectChannel fetch(RJA rja, int responseCode, JsonElement data) {
         if(!data.isJsonObject())
             return null;
-        return DirectChannel.from(rja, data.getAsJsonObject());
+        DirectChannel channel = DirectChannel.from(rja, data.getAsJsonObject());
+        rja.cacheChannel(channel);
+        return channel;
     }
 
 }

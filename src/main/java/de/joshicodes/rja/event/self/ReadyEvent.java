@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
+import de.joshicodes.rja.object.Emoji;
 import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.rest.RestAction;
@@ -21,6 +22,7 @@ public class ReadyEvent extends IncomingEvent {
     }
 
     public ReadyEvent(RJA rja) {
+
         super(rja, "Ready");
     }
 
@@ -51,6 +53,15 @@ public class ReadyEvent extends IncomingEvent {
         }
         JsonArray members = object.get("members").getAsJsonArray();
         // TODO: Cache members
+
+        if(object.has("emojis")) {
+            JsonArray emojis = object.get("emojis").getAsJsonArray();
+            for(JsonElement emoji : emojis) {
+                if(!emoji.isJsonObject()) continue;
+                rja.cacheEmoji(Emoji.from(rja, emoji.getAsJsonObject()));
+            }
+        }
+
         return new ReadyEvent(rja);
     }
 

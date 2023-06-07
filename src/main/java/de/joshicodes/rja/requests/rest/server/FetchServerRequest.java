@@ -12,7 +12,7 @@ public class FetchServerRequest extends RestRequest<Server> {
     }
 
     @Override
-    public Server fetch(RJA rja, JsonElement data) {
+    public Server fetch(RJA rja, int responseCode, JsonElement data) {
         if(data == null || !data.isJsonObject()) return null;
         return Server.from(rja, data.getAsJsonObject());
     }

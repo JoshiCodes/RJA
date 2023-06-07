@@ -12,7 +12,7 @@ public class FetchUserRequest extends RestRequest<User> {
     }
 
     @Override
-    public User fetch(RJA rja, JsonElement data) {
+    public User fetch(RJA rja, int responseCode, JsonElement data) {
         if(!data.isJsonObject())
             return null;
         return User.from(rja, data.getAsJsonObject());
