@@ -5,6 +5,25 @@
 ### Note: This is a work in progress and not all features are implemented yet. If you find any bugs, please open an issue.
 ### Also, the Revolt-API may change at any time, so this API may not work anymore. Please open an issue if you find any bugs or have any suggestions.
 
+
+# Overview
+- [Overview](#overview)
+- [Install](#install)
+    - [Maven](#maven)
+<br><br>
+- [Usage](#usage)
+- [RestActions](#restactions)
+- [Sending Messages](#sending-messages)
+- [EventListeners](#eventlisteners)
+- [Caching](#caching)
+<br><br>
+- [Examples](#examples)
+  <br><br>
+- [Contributing](#contributing)
+- [Dependencies](#dependencies)
+- [Related Projects](#related-projects)
+- [License](#license)
+
 ## Install
 
 You can download the latest version from the [releases page](https://github.com/JoshiCodes/RJA/releases/latest)
