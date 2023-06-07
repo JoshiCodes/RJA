@@ -64,7 +64,7 @@ builder.disableCaching(CachingPolicy.MEMBER); // Disables caching for the Member
 // More about Caching at #Caching or in the JavaDocs
 ```
 
-But wait, there is more. After building your `RJA`` instance you can request stuff from the API.
+But wait, there is more. After building your `RJA` instance you can request stuff from the API.
 ```java
 RJA rja = ...
 
