@@ -19,6 +19,7 @@ Replace `VERSION HERE` with the latest version.
     <version>[VERSION HERE]</version>
 </dependency>
 ```
+This can also be found under [Packages](https://github.com/JoshiCodes/RJA/packages/1836191)
 
 
 ## Usage
