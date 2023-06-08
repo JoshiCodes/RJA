@@ -6,7 +6,7 @@
 
     <groupId>de.joshicodes</groupId>
     <artifactId>rja</artifactId>
-    <version>1.0-alpha.6e2</version>
+    <version>1.0-alpha.7</version>
 
     <description>
         Simple Java API for Revolt.
