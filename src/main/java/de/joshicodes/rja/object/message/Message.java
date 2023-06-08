@@ -18,6 +18,8 @@ import de.joshicodes.rja.util.JsonUtil;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class Message {
 
@@ -242,6 +244,23 @@ public abstract class Message {
 
     public MessageEditAction edit(final MessageEmbed... embeds) {
         return new MessageEditAction(getRJA(), this).setEmbeds(embeds);
+    }
+
+    /**
+     * Get all the users mentioned in this message.
+     * This is a simple regex implementation and may not be accurate.
+     * @return A list of all the users mentioned in this message.
+     */
+    public List<String> getMentionedUsers() {
+        // regex to find all mentions (mention = "<@ID>")
+        // ID is A-Z 0-9
+        Pattern pattern = Pattern.compile("<@([A-Z0-9]+)>");
+        Matcher matcher = pattern.matcher(getContent());
+        List<String> users = new ArrayList<>();
+        while(matcher.find()) {
+            users.add(matcher.group(1));
+        }
+        return users;
     }
 
     /**
