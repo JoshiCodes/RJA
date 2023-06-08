@@ -9,11 +9,13 @@ import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.requests.rest.interaction.AddReactionRequest;
+import de.joshicodes.rja.requests.rest.interaction.RemoveReactionRequest;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.rest.message.MessageEditAction;
 import de.joshicodes.rja.rest.message.MessageSendAction;
 import de.joshicodes.rja.util.JsonUtil;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +70,26 @@ public abstract class Message {
             replies = message.getReplies();
         } else replies = null;
 
-        // TODO: reactions, interactions
+        final List<MessageReaction> reactions;
+        if(object.has("reactions")) {
+
+            reactions = new ArrayList<>();
+
+            JsonObject reactionsObject = object.get("reactions").getAsJsonObject();
+            for(String key : reactionsObject.keySet()) {
+
+                List<String> users = new ArrayList<>();
+                for(JsonElement element : reactionsObject.get(key).getAsJsonArray()) {
+                    users.add(element.getAsString());
+                }
+                reactions.add(new MessageReaction(rja, key, users));
+            }
+
+        } else if (message != null) {
+            reactions = message.getReactions();
+        } else reactions = new ArrayList<>();
+
+        // TODO: interactions
 
         Masquerade m = Masquerade.from(rja, object);
         final Masquerade masquerade;
@@ -139,6 +160,11 @@ public abstract class Message {
             }
 
             @Override
+            public List<MessageReaction> getReactions() {
+                return reactions;
+            }
+
+            @Override
             public Masquerade getMasquerade() {
                 return masquerade;
             }
@@ -178,6 +204,7 @@ public abstract class Message {
     abstract public List<MessageEmbed> getEmbeds();
     abstract public List<String> getMentions();
     abstract public List<String> getReplies();
+    abstract public List<MessageReaction> getReactions();
 
     abstract public Masquerade getMasquerade();
 
@@ -209,17 +236,122 @@ public abstract class Message {
         return new MessageEditAction(getRJA(), this).setEmbeds(embeds);
     }
 
-    public RestAction<Void> react(Emoji emoji) {
+    /**
+     * Gets the reaction of the given emoji.
+     * @param emoji The emoji to get the reaction of.
+     * @return The reaction of the given emoji or null if there is no reaction for the given emoji.
+     */
+    public MessageReaction getReaction(String emoji) {
+        return getReactions().stream().filter(r -> r.getEmojiId().equals(emoji)).findFirst().orElse(null);
+    }
+
+    /**
+     * Removes a random reaction of the given emoji.
+     * @param emoji The emoji to remove the reaction of.
+     * @return A RestAction that completes with the removed reaction. If there is no reaction for the given emoji afterward, this will complete with null.
+     */
+    public RestAction<MessageReaction> removeReaction(Emoji emoji) {
+        return removeReaction(emoji.getId());
+    }
+
+    /**
+     * Removes a random reaction of the given emoji.
+     * @param emoji The emoji to remove the reaction of.
+     * @return A RestAction that completes with the removed reaction. If there is no reaction for the given emoji afterward, this will complete with null.
+     */
+    public RestAction<MessageReaction> removeReaction(String emoji) {
+        return removeReaction(emoji, null, false);
+    }
+
+    /**
+     * Removes a reaction of the given emoji by the given user.
+     * @param emoji The emoji to remove the reaction of.
+     * @param user The user to remove the reaction of.
+     * @return A RestAction that completes with the removed reaction. If there is no reaction for the given emoji and user afterward, this will complete with null.
+     */
+    public RestAction<MessageReaction> removeReaction(Emoji emoji, String user) {
+        return removeReaction(emoji.getId(), user);
+    }
+
+    /**
+     * Removes a reaction of the given emoji by the given user.
+     * @param emoji The emoji to remove the reaction of.
+     * @param user The user to remove the reaction of.
+     * @return A RestAction that completes with the removed reaction. If there is no reaction for the given emoji and user afterward, this will complete with null.
+     */
+    public RestAction<MessageReaction> removeReaction(String emoji, String user) {
+        return removeReaction(emoji, user, false);
+    }
+
+    /**
+     * Removes all reactions of the given emoji.
+     * @param emoji The emoji to remove the reactions of.
+     * @param removeAll Whether to remove all reactions or just one.
+     * @return A RestAction that completes with the removed reaction. If there is no reaction for the given emoji afterward, this will complete with null.
+     */
+    public RestAction<MessageReaction> removeReaction(Emoji emoji, boolean removeAll) {
+        return removeReaction(emoji.getId(), removeAll);
+    }
+
+    /**
+     * Removes all reactions of the given emoji.
+     * @param emoji The emoji to remove the reactions of.
+     * @param removeAll Whether to remove all reactions or just one.
+     * @return A RestAction that completes with the removed reaction. If there is no reaction for the given emoji afterward, this will complete with null.
+     */
+    public RestAction<MessageReaction> removeReaction(String emoji, boolean removeAll) {
+        return removeReaction(emoji, null, removeAll);
+    }
+
+    RestAction<MessageReaction> removeReaction(Emoji emoji, String user, boolean removeAll) {
+        return removeReaction(emoji.getId(), user, removeAll);
+    }
+
+    RestAction<MessageReaction> removeReaction(String emoji, @Nullable String user, boolean removeAll) {
+        return new RestAction<>(getRJA()) {
+            @Override
+            protected MessageReaction execute() {
+                RemoveReactionRequest request = new RemoveReactionRequest(getChannelId(), getId(), emoji, user, removeAll);
+                getRJA().getRequestHandler().sendRequest(getRJA(), request);
+                if(getReaction(emoji) != null) {
+                    if(removeAll) {
+                        getReaction(emoji).removeReaction(user);
+                    } else {
+                        if(user == null) {
+                            // We do not know which user got removed, so we have to fetch the message again
+                            // Cannot retrieve reactions from a message alone, so we have to remove it from the cache and retrieve it again
+                            getRJA().getMessageCache().remove(getId());
+                            Message updated = getRJA().retrieveMessage(getChannelId(), getId()).complete(); // Retrieve the message again (this will cache it if enabled)
+
+                            // This Message instance is now outdated, so we have to update it
+                            getReactions().stream().filter(r -> r.getEmojiId().equals(emoji)).findFirst().ifPresent(r -> {
+                                getReactions().remove(r);
+                                MessageReaction updatedReaction = updated.getReaction(emoji);
+                                if(updatedReaction != null) getReactions().add(updatedReaction);
+                            });
+                        } else {
+                            getReaction(emoji).removeReaction(user);
+                        }
+                    }
+                }
+                return getReaction(emoji);
+            }
+        };
+    }
+
+    public RestAction<MessageReaction> react(Emoji emoji) {
         return react(emoji.getId());
     }
 
-    public RestAction<Void> react(String emoji) {
+    public RestAction<MessageReaction> react(String emoji) {
         return new RestAction<>(getRJA()) {
             @Override
-            protected Void execute() {
+            protected MessageReaction execute() {
                 AddReactionRequest request = new AddReactionRequest(getChannelId(), getId(), emoji);
                 getRJA().getRequestHandler().sendRequest(getRJA(), request);
-                return null;
+                MessageReaction reaction = getReaction(emoji);
+                reaction.addReaction(getRJA().retrieveSelfUser().complete().getId());
+                return reaction;
             }
         };
     }

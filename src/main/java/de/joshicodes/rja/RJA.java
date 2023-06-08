@@ -179,10 +179,14 @@ public abstract class RJA {
      * @see RestAction
      */
     public RestAction<Message> retrieveMessage(String channel, String id) {
+        return retrieveMessage(channel, id, false);
+    }
+
+    public RestAction<Message> retrieveMessage(String channel, String id, boolean forceFetch) {
         return new RestAction<>(this) {
             @Override
             public Message execute() {
-                if(messageCache != null) {
+                if(messageCache != null && !forceFetch) {
                     // Caching for Message is enabled
                     if(messageCache.containsKey(id)) {
                         return messageCache.get(id);
@@ -190,7 +194,9 @@ public abstract class RJA {
                 }
                 // Message is not in cache or caching is disabled
                 FetchMessageRequest request = new FetchMessageRequest(channel, id);
-                return getRequestHandler().sendRequest(RJA.this, request);
+                Message message = getRequestHandler().sendRequest(RJA.this, request);
+                if(messageCache != null) messageCache.put(id, message);  // Cache the message
+                return message;
             }
         };
     }

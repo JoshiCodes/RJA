@@ -33,7 +33,7 @@ public class MessageUnreactEvent extends IncomingEvent {
     }
 
     public RestAction<Message> getMessage() {
-        return getRJA().retrieveMessage(channelId, messageId);
+        return getRJA().retrieveMessage(channelId, messageId, true);
     }
 
     public String getChannelId() {
@@ -66,6 +66,14 @@ public class MessageUnreactEvent extends IncomingEvent {
         String message = object.get("id").getAsString();
         String channel = object.get("channel_id").getAsString();
         String user = object.get("user_id").getAsString();
+
+        Message old = rja.retrieveMessage(channel, messageId).complete();
+        if(old.getReaction(emojiId) != null) {
+            if(!old.getReaction(emojiId).contains(user)) {
+                return null;  // User has never reacted with this emoji, so this event is invalid
+            }
+        }
+        rja.getMessageCache().remove(messageId);  // remove message from cache, as it could be outdated
 
         if(user.equals(rja.retrieveSelfUser().complete().getId())) return null;
 
