@@ -212,6 +212,14 @@ public abstract class Message {
         return getRJA().retrieveChannel(getChannelId());
     }
 
+    public MessageSendAction reply(MessageEmbed embed, boolean mention) {
+        return getRJA().retrieveChannel(getChannelId()).complete().sendEmbeds(embed).addReply(getId(), mention);
+    }
+
+    public MessageSendAction reply(MessageEmbed embed) {
+        return reply(embed, false);
+    }
+
     public MessageSendAction reply(String content, boolean mention) {
         return getRJA().retrieveChannel(getChannelId()).complete().sendMessage(content).addReply(getId(), mention);
     }
