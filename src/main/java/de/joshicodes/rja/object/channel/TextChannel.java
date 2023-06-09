@@ -26,7 +26,7 @@ public abstract class TextChannel extends ServerChannel {
         // TODO: Default Permissions and Role Permissions
         final boolean nsfw = JsonUtil.getBoolean(object, "nsfw", false);
 
-        return new TextChannel() {
+        TextChannel tc = new TextChannel() {
             @Override
             public String getServerId() {
                 return serverId;
@@ -40,12 +40,6 @@ public abstract class TextChannel extends ServerChannel {
             @Override
             public String getDescription() {
                 return description;
-            }
-
-            @Nullable
-            @Override
-            public String lastMessageId() {
-                return lastMessageId;
             }
 
             @Override
@@ -63,7 +57,15 @@ public abstract class TextChannel extends ServerChannel {
                 return id;
             }
         };
+        tc.setLastMessageId(lastMessageId);
+        return tc;
 
+    }
+
+    private String lastMessageId;
+
+    public static void updateLastMessageId(TextChannel tc, String id) {
+        tc.setLastMessageId(id);
     }
 
     abstract public String getServerId();
@@ -73,7 +75,9 @@ public abstract class TextChannel extends ServerChannel {
     //abstract ChannelIcon getIcon(); // TODO
 
     @Nullable
-    abstract public String lastMessageId();
+    public String lastMessageId() {
+        return lastMessageId;
+    }
 
     abstract public boolean isNsfw();
 
@@ -93,6 +97,10 @@ public abstract class TextChannel extends ServerChannel {
     @Override
     public ChannelType getType() {
         return ChannelType.TEXT_CHANNEL;
+    }
+
+    void setLastMessageId(String id) {
+        this.lastMessageId = id;
     }
 
 }

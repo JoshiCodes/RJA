@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.object.channel.ServerChannel;
+import de.joshicodes.rja.object.channel.TextChannel;
 import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
@@ -61,6 +62,12 @@ public class MessageReceivedEvent extends IncomingEvent {
         User author = rja.retrieveUser(authorId).complete();
         Message message = Message.from(rja, object, null);
         rja.cacheMessage(message);
+        // update cached channel
+        rja.getChannelCache().stream().filter(c -> c.getId().equals(message.getChannelId())).findFirst().ifPresent(c -> {
+            if(c instanceof TextChannel tc) {
+                TextChannel.updateLastMessageId(tc, message.getId());
+            }
+        });
         return new MessageReceivedEvent(rja, author, message);
     }
 
