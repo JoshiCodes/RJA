@@ -14,6 +14,7 @@ import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.channel.TextChannel;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.object.message.Message;
+import de.joshicodes.rja.object.server.Member;
 import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.requests.RequestHandler;
@@ -22,6 +23,7 @@ import de.joshicodes.rja.requests.rest.interaction.FetchEmojiRequest;
 import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.requests.rest.message.FetchMessageRequest;
 import de.joshicodes.rja.requests.rest.server.FetchServerRequest;
+import de.joshicodes.rja.requests.rest.server.member.FetchMemberRequest;
 import de.joshicodes.rja.requests.rest.user.FetchUserRequest;
 import de.joshicodes.rja.requests.rest.user.OpenDirectMessageRequest;
 import de.joshicodes.rja.requests.rest.user.self.FetchSelfRequest;
@@ -47,7 +49,10 @@ import java.util.logging.Logger;
  */
 public abstract class RJA {
 
+    private final List<CachingPolicy> cachingPolicies;
+
     private final CacheMap<String, User> userCache;
+    private final CacheMap<String, Member> memberCache;
     private final CacheMap<String, Message> messageCache;
     private final CacheMap<String, Emoji> emojiCache;
     private final Cache<GenericChannel> channelCache;
@@ -57,8 +62,15 @@ public abstract class RJA {
 
     RJA(RJABuilder builder, List<CachingPolicy> cachingPolicies) {
 
-        if(cachingPolicies.contains(CachingPolicy.MEMBER)) userCache = new CacheMap<>();
-        else userCache = null;
+        this.cachingPolicies = cachingPolicies;
+
+        if(cachingPolicies.contains(CachingPolicy.MEMBER)) {
+            userCache = new CacheMap<>();
+            memberCache = new CacheMap<>();
+        } else {
+            userCache = null;
+            memberCache = null;
+        }
 
         if(cachingPolicies.contains(CachingPolicy.MESSAGE)) messageCache = new CacheMap<>();
         else messageCache = null;
@@ -165,6 +177,28 @@ public abstract class RJA {
                 }
                 // Caching is disabled or user is not found in cache
                 FetchUserRequest request = new FetchUserRequest(id);
+                return getRequestHandler().sendRequest(rja, request);
+            }
+        };
+    }
+
+    public RestAction<Member> retrieveMember(final Server server, final User user) {
+        return retrieveMember(server, user.getId());
+    }
+
+    public RestAction<Member> retrieveMember(final Server server, final String id) {
+        final RJA rja = this;
+        return new RestAction<>(this) {
+            @Override
+            public Member execute() {
+                if(memberCache != null) {
+                    // Caching for Member is enabled
+                    if(memberCache.containsKey(id)) {
+                        return memberCache.get(id);
+                    }
+                }
+                // Caching is disabled or member is not found in cache
+                FetchMemberRequest request = new FetchMemberRequest(server.getId(), id);
                 return getRequestHandler().sendRequest(rja, request);
             }
         };
@@ -301,14 +335,25 @@ public abstract class RJA {
         emojiCache.put(emoji.getId(), emoji);
     }
 
-    public void cacheUser(JsonObject user) {
-        if(userCache == null) return; // Caching is disabled
+    public User cacheUser(JsonObject user) {
         User u = User.from(this, user);
+        if(userCache == null) return u; // Caching is disabled
         if(u != null) {
             userCache.put(u.getId(), u);
             //getLogger().info("Loaded user " + u.getUsername()); // DEBUG
         } else {
             getLogger().warning("Failed to load user!");
+        }
+        return u;
+    }
+
+    public void cacheMember(Member member) {
+        if(memberCache == null) return; // Caching is disabled
+        if(member != null) {
+            memberCache.put(member.getId(), member);
+            //getLogger().info("Loaded member " + m.getDisplayName()); // DEBUG
+        } else {
+            getLogger().warning("Failed to load member!");
         }
     }
 
@@ -431,6 +476,10 @@ public abstract class RJA {
                 e.printStackTrace();
             }
         }
+    }
+
+    public List<CachingPolicy> getCachingPolicies() {
+        return cachingPolicies;
     }
 
 }

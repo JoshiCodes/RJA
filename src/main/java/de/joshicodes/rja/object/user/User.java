@@ -41,7 +41,7 @@ public abstract class User implements IMentionable {
 
         final String id = object.get("_id").getAsString();
         final String username = object.get("username").getAsString();
-        final Avatar avatar = Avatar.from(rja, object.get("avatar").getAsJsonObject());
+        final Avatar avatar = Avatar.from(rja, JsonUtil.getObject(object, "avatar", null));
         //final Relations relations = Relations.from(object.get("relations").getAsJsonObject());
         final int badges = JsonUtil.getInt(object, "badges", 0);
         final UserStatus status = UserStatus.from(JsonUtil.getObject(object, "status", null));

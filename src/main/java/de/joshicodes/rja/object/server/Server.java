@@ -5,10 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.object.user.User;
+import de.joshicodes.rja.requests.rest.server.member.FetchAllMembersRequest;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Server {
@@ -68,6 +70,27 @@ public class Server {
         this.rja = rja;
         this.id = id;
         this.ownerId = owner;
+    }
+
+    public RestAction<Member> retrieveMember(User user) {
+        return rja.retrieveMember(this, user);
+    }
+
+    /**
+     * Fetches all members of this server.
+     * <b>Note:</b> The resulting {@link HashMap} can get very large, depending on the size of the server.
+     *              If you need a specific member, use {@link #retrieveMember(User)} instead.
+     * @param excludeOffline Whether to exclude offline members.
+     * @return A {@link RestAction} that retrieves a {@link HashMap} of {@link User}s and {@link Member}s.
+     */
+    public RestAction<HashMap<User, Member>> retrieveAllMembers(boolean excludeOffline) {
+        return new RestAction<>(rja) {
+            @Override
+            protected HashMap<User, Member> execute() {
+                FetchAllMembersRequest request = new FetchAllMembersRequest(id, excludeOffline);
+                return rja.getRequestHandler().sendRequest(rja, request);
+            }
+        };
     }
 
     public RJA getRJA() {

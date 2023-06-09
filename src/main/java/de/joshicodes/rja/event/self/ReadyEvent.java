@@ -6,9 +6,14 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.object.Emoji;
+import de.joshicodes.rja.object.channel.GenericChannel;
+import de.joshicodes.rja.object.server.Member;
 import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.rest.RestAction;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This event is fired when the bot is ready.
@@ -18,12 +23,36 @@ import de.joshicodes.rja.rest.RestAction;
 public class ReadyEvent extends IncomingEvent {
 
     public ReadyEvent() {
-        this(null);
+        this(null, null, null, null, null);
     }
 
-    public ReadyEvent(RJA rja) {
+    private final List<User> users;
+    private final List<Server> servers;
+    private final List<GenericChannel> channels;
+    private final List<Member> members;
 
+    public ReadyEvent(RJA rja, List<User> users, final List<Server> servers, final List<GenericChannel> channels, final List<Member> members) {
         super(rja, "Ready");
+        this.users = users;
+        this.servers = servers;
+        this.channels = channels;
+        this.members = members;
+    }
+
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public List<Server> getServers() {
+        return servers;
+    }
+
+    public List<GenericChannel> getChannels() {
+        return channels;
+    }
+
+    public List<Member> getMembers() {
+        return members;
     }
 
     public User getSelf() {
@@ -36,23 +65,37 @@ public class ReadyEvent extends IncomingEvent {
 
     @Override
     public IncomingEvent handle(RJA rja, JsonObject object) {
+
+        List<User> userList = new ArrayList<>();
+        List<Server> serverList = new ArrayList<>();
+        List<GenericChannel> channelList = new ArrayList<>();
+        List<Member> memberList = new ArrayList<>();
+
         JsonArray users = object.get("users").getAsJsonArray();
         for(JsonElement user : users) {
             if(!user.isJsonObject()) continue;
-            rja.cacheUser(user.getAsJsonObject());
+            userList.add(rja.cacheUser(user.getAsJsonObject()));
         }
         JsonArray servers = object.get("servers").getAsJsonArray();
         for(JsonElement server : servers) {
             if(!server.isJsonObject()) continue;
-            rja.cacheServer(Server.from(rja, server.getAsJsonObject()));
+            Server s = rja.cacheServer(Server.from(rja, server.getAsJsonObject()));
+            serverList.add(s);
         }
         JsonArray channels = object.get("channels").getAsJsonArray();
         for(JsonElement channel : channels) {
             if(!channel.isJsonObject()) continue;
-            rja.cacheChannel(channel.getAsJsonObject());
+            GenericChannel c = rja.cacheChannel(channel.getAsJsonObject());
+            channelList.add(c);
         }
+
         JsonArray members = object.get("members").getAsJsonArray();
-        // TODO: Cache members
+        for(JsonElement member : members) {
+            if(!member.isJsonObject()) continue;
+            Member m = Member.from(rja, member.getAsJsonObject());
+            rja.cacheMember(m);
+            memberList.add(m);
+        }
 
         if(object.has("emojis")) {
             JsonArray emojis = object.get("emojis").getAsJsonArray();
@@ -62,7 +105,7 @@ public class ReadyEvent extends IncomingEvent {
             }
         }
 
-        return new ReadyEvent(rja);
+        return new ReadyEvent(rja, userList, serverList, channelList, memberList);
     }
 
 }
