@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.object.IMentionable;
 import de.joshicodes.rja.object.message.MessageReceiver;
+import de.joshicodes.rja.requests.rest.channel.info.FetchChannelRequest;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
@@ -37,6 +38,16 @@ public abstract class GenericChannel extends MessageReceiver implements IMention
     abstract public RestAction<Void> close();
 
     abstract public ChannelType getType();
+
+    public RestAction<GenericChannel> fetch() {
+        return new RestAction<GenericChannel>(getRJA()) {
+            @Override
+            protected GenericChannel execute() {
+                FetchChannelRequest request = new FetchChannelRequest(getId());
+                return getRJA().getRequestHandler().sendRequest(getRJA(), request);
+            }
+        };
+    }
 
     @Override
     public String getAsMention() {

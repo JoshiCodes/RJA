@@ -15,7 +15,11 @@ public class MessageSendRequest extends RestRequest<Message> {
     public Message fetch(RJA rja, int responseCode, JsonElement data) {
         if(!data.isJsonObject())
             return null;
-        return Message.from(rja, data.getAsJsonObject(), null);
+        Message m = Message.from(rja, data.getAsJsonObject(), null);
+        rja.cacheMessage(m);
+        // update cached channel
+        rja.getChannelCache().stream().filter(c -> c.getId().equals(m.getChannelId())).findFirst().ifPresent(c -> rja.cacheChannel(c.fetch().complete()));
+        return m;
     }
 
 }
