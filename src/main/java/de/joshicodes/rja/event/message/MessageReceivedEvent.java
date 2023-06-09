@@ -5,7 +5,10 @@ import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.object.channel.ServerChannel;
 import de.joshicodes.rja.object.message.Message;
+import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.object.user.User;
+
+import javax.annotation.Nullable;
 
 public class MessageReceivedEvent extends IncomingEvent {
 
@@ -36,6 +39,14 @@ public class MessageReceivedEvent extends IncomingEvent {
 
     public boolean isFromServer() {
         return message.getChannel().complete() instanceof ServerChannel;
+    }
+
+    @Nullable
+    public Server getServer() {
+            if(!isFromServer()) {
+            return null;
+        }
+        return ((ServerChannel) message.getChannel().complete()).getServer().complete();
     }
 
     @Override

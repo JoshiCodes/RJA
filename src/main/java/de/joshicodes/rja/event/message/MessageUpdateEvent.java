@@ -4,9 +4,12 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.object.channel.GenericChannel;
+import de.joshicodes.rja.object.channel.ServerChannel;
 import de.joshicodes.rja.object.message.Message;
+import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.requests.rest.message.FetchMessageRequest;
 
+import javax.annotation.Nullable;
 import java.util.logging.Logger;
 
 public class MessageUpdateEvent extends IncomingEvent {
@@ -30,6 +33,18 @@ public class MessageUpdateEvent extends IncomingEvent {
 
     public Message getMessage() {
         return message;
+    }
+
+    public boolean isFromServer() {
+        return channel instanceof ServerChannel;
+    }
+
+    @Nullable
+    public Server getServer() {
+        if(!isFromServer()) {
+            return null;
+        }
+        return ((ServerChannel) message.getChannel().complete()).getServer().complete();
     }
 
     @Override
