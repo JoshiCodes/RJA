@@ -37,7 +37,7 @@ public class Server {
             for(String roleId : rolesObject.keySet()) {
                 JsonObject roleObject = rolesObject.getAsJsonObject(roleId);
                 if(roleObject == null) continue;
-                Role role = Role.from(rja, id, roleObject);
+                Role role = Role.from(rja, roleId, roleObject);
                 roles.add(role);
             }
         }
