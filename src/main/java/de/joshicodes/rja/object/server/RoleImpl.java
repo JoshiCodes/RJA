@@ -25,8 +25,6 @@ public class RoleImpl extends Role {
     public RoleImpl(final RJA rja, final String id, final JsonObject object) {
         super(rja);
 
-        System.out.println(object);
-
         this.id = id;
 
         name = JsonUtil.getString(object, "name", null);
