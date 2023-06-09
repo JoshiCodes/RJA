@@ -5,7 +5,7 @@ import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.object.server.Server;
 import de.joshicodes.rja.util.JsonUtil;
 
-public abstract class Emoji {
+public abstract class Emoji implements IMentionable {
 
     public static Emoji from(RJA rja, JsonObject data) {
         if(data == null || data.isJsonNull()) return null;
@@ -83,6 +83,7 @@ public abstract class Emoji {
     abstract public boolean isAnimated();
     abstract public boolean isNSFW();
 
+    @Override
     public String getAsMention() {
         return ":" + getId() + ":";
     }

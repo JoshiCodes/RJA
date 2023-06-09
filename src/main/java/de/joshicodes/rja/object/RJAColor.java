@@ -12,6 +12,10 @@ public class RJAColor {
     private int gradientAngle;
     private GradientType gradientType;
 
+    public RJAColor(String color) {
+        this(Color.WHITE);  // TODO: Parse Regex
+    }
+
     /**
      * Creates a new EmbedColor with the given color.
      * @param color The color of the EmbedColor.

@@ -2,12 +2,13 @@ package de.joshicodes.rja.object.user;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
+import de.joshicodes.rja.object.IMentionable;
 import de.joshicodes.rja.object.channel.DirectChannel;
 import de.joshicodes.rja.object.enums.RelationShip;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
-public abstract class User {
+public abstract class User implements IMentionable {
 
     abstract public RJA getRJA();
 
@@ -24,6 +25,7 @@ public abstract class User {
     abstract public RelationShip getRelationship();
     abstract public boolean isOnline();
 
+    @Override
     public String getAsMention() {
         return "<@" + getId() + ">";
     }
