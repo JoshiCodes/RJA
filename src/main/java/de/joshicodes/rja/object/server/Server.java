@@ -29,11 +29,22 @@ public class Server {
             if(channelId == null) continue;
             channels.add(channelId);
         }
+        final List<Role> roles = new ArrayList<>();
+        if(object.has("roles")) {
+            JsonObject rolesObject = object.getAsJsonObject("roles");
+            for(String roleId : rolesObject.keySet()) {
+                JsonObject roleObject = rolesObject.getAsJsonObject(roleId);
+                if(roleObject == null) continue;
+                Role role = Role.from(rja, id, roleObject);
+                roles.add(role);
+            }
+        }
 
         Server server = new Server(rja, id, ownerId);
         server.name = name;
         server.description = description;
         server.channels = channels;
+        server.roles = roles;
 
         server.icon = new Icon(rja, server, JsonUtil.getObject(object, "icon", null));
 
@@ -48,6 +59,8 @@ public class Server {
     private String name;
     private String description;
     private List<String> channels;
+
+    private List<Role> roles;
 
     private Icon icon;
 
@@ -81,6 +94,10 @@ public class Server {
 
     public List<String> getChannelIds() {
         return channels;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
     }
 
     public void update(JsonObject server) {
@@ -123,6 +140,10 @@ public class Server {
 
     public Icon getIcon() {
         return icon;
+    }
+
+    public Role getRole(String roleId) {
+        return roles.stream().filter(r -> r.getId().equals(roleId)).findFirst().orElse(null);
     }
 
     public static class Icon {
