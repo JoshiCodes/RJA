@@ -104,4 +104,22 @@ public class MemberImpl extends Member {
         return timeoutRaw;
     }
 
+    @Override
+    public List<Permission> getAllowedPermissions() {
+        List<Permission> list = new ArrayList<>();
+        for(Role role : getRoles()) {
+            list.addAll(role.getAllowedPermissions());
+        }
+        return list;
+    }
+
+    @Override
+    public List<Permission> getDeniedPermissions() {
+        List<Permission> list = new ArrayList<>();
+        for(Role role : getRoles()) {
+            list.addAll(role.getDeniedPermissions());
+        }
+        return list;
+    }
+
 }

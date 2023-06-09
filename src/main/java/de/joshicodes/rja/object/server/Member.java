@@ -9,7 +9,7 @@ import de.joshicodes.rja.rest.RestAction;
 
 import java.util.List;
 
-public abstract class Member implements IMentionable {
+public abstract class Member implements IMentionable, IPermissionHolder {
 
     public static Member from(RJA rja, JsonObject data) {
         return new MemberImpl(rja, data);
