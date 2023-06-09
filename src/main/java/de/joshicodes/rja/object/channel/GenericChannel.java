@@ -2,11 +2,12 @@ package de.joshicodes.rja.object.channel;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
+import de.joshicodes.rja.object.IMentionable;
 import de.joshicodes.rja.object.message.MessageReceiver;
 import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
-public abstract class GenericChannel extends MessageReceiver {
+public abstract class GenericChannel extends MessageReceiver implements IMentionable {
 
     public static GenericChannel from(final RJA rja, final JsonObject object) {
         final String type = JsonUtil.getString(object, "channel_type", null);
@@ -36,5 +37,10 @@ public abstract class GenericChannel extends MessageReceiver {
     abstract public RestAction<Void> close();
 
     abstract public ChannelType getType();
+
+    @Override
+    public String getAsMention() {
+        return "<#" + getId() + ">";
+    }
 
 }
