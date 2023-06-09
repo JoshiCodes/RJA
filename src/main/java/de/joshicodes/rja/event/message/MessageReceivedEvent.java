@@ -75,7 +75,7 @@ public class MessageReceivedEvent extends IncomingEvent {
         }
         rja.getChannelCache().stream().filter(c -> c.getId().equals(message.getChannelId())).findFirst().ifPresent(c -> {
             if(c instanceof TextChannel tc) {
-                TextChannel.updateLastMessageId(tc, message.getId());
+                tc.getCachedHistory().add(message.getId());
             }
         });
         return new MessageReceivedEvent(rja, author, message, textChannel);

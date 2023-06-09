@@ -6,6 +6,8 @@ import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class TextChannel extends ServerChannel {
 
@@ -57,16 +59,14 @@ public abstract class TextChannel extends ServerChannel {
                 return id;
             }
         };
-        tc.setLastMessageId(lastMessageId);
+        tc.cachedHistory = new ArrayList<>();
+        if(lastMessageId != null)
+            tc.cachedHistory.add(lastMessageId);
         return tc;
 
     }
 
-    private String lastMessageId;
-
-    public static void updateLastMessageId(TextChannel tc, String id) {
-        tc.setLastMessageId(id);
-    }
+    private List<String> cachedHistory;
 
     abstract public String getServerId();
     abstract public String getName();
@@ -76,7 +76,17 @@ public abstract class TextChannel extends ServerChannel {
 
     @Nullable
     public String lastMessageId() {
-        return lastMessageId;
+        if(getCachedHistory().isEmpty()) {
+            return null;
+        }
+        if(getCachedHistory().size() > 1) {
+            return getCachedHistory().get(getCachedHistory().size() - 2);
+        }
+        return getCachedHistory().get(0);
+    }
+
+    public List<String> getCachedHistory() {
+        return cachedHistory;
     }
 
     abstract public boolean isNsfw();
@@ -97,10 +107,6 @@ public abstract class TextChannel extends ServerChannel {
     @Override
     public ChannelType getType() {
         return ChannelType.TEXT_CHANNEL;
-    }
-
-    void setLastMessageId(String id) {
-        this.lastMessageId = id;
     }
 
 }

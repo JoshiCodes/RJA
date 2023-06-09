@@ -20,7 +20,7 @@ public class MessageSendRequest extends RestRequest<Message> {
         rja.cacheMessage(m);
         rja.getChannelCache().stream().filter(c -> c.getId().equals(m.getChannelId())).findFirst().ifPresent(c -> {
             if(c instanceof TextChannel tc) {
-                TextChannel.updateLastMessageId(tc, m.getId());
+                tc.getCachedHistory().add(m.getId());
             }
         });
         return m;
