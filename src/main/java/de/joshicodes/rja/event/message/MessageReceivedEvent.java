@@ -14,16 +14,22 @@ import javax.annotation.Nullable;
 public class MessageReceivedEvent extends IncomingEvent {
 
     public MessageReceivedEvent() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
 
+    private final TextChannel channel;
     private final User author;
     private final Message message;
 
-    public MessageReceivedEvent(RJA rja, User author, Message message) {
+    public MessageReceivedEvent(RJA rja, User author, Message message, TextChannel channel) {
         super(rja, "Message");
         this.author = author;
         this.message = message;
+        this.channel = channel;
+    }
+
+    public TextChannel getChannel() {
+        return channel;
     }
 
     public User getAuthor() {
@@ -63,12 +69,16 @@ public class MessageReceivedEvent extends IncomingEvent {
         Message message = Message.from(rja, object, null);
         rja.cacheMessage(message);
         // update cached channel
+        TextChannel textChannel = null;
+        if(message.getChannel().complete() instanceof TextChannel tc) {
+            textChannel = tc;
+        }
         rja.getChannelCache().stream().filter(c -> c.getId().equals(message.getChannelId())).findFirst().ifPresent(c -> {
             if(c instanceof TextChannel tc) {
                 TextChannel.updateLastMessageId(tc, message.getId());
             }
         });
-        return new MessageReceivedEvent(rja, author, message);
+        return new MessageReceivedEvent(rja, author, message, textChannel);
     }
 
 }
