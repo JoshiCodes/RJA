@@ -22,7 +22,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class RequestHandler {
@@ -35,14 +38,14 @@ public class RequestHandler {
     private final List<EventListener> listeners;
     private final List<IncomingEvent> events;
 
-    private final HashMap<RestAction<?>, Pair<Consumer<Object>, Consumer<Throwable>>> actionQueue;
-    private boolean processingQueue = false;
+    private final ConcurrentHashMap<RestAction<?>, Pair<Consumer<Object>, Consumer<Throwable>>> actionQueue;
+    private AtomicBoolean processingQueue = new AtomicBoolean(false);
 
     public RequestHandler(RJABuilder rja, List<EventListener> listeners, List<IncomingEvent> events) throws URISyntaxException {
         this.rja = rja;
         this.listeners = listeners;
         this.events = events;
-        this.actionQueue = new HashMap<>();
+        this.actionQueue = new ConcurrentHashMap<>();
         rja.getLogger().info("Connecting...");
         this.socket = new RequestSocket(this);
     }
@@ -74,7 +77,7 @@ public class RequestHandler {
      *
      * @deprecated Use {@link #fetchRequest(RJA, RestRequest)} instead
      */
-    @Deprecated(forRemoval = true, since = "1.1-alpha.1")
+    @Deprecated(forRemoval = true, since = "1.0-beta.1")
     public <T> T sendRequest(final RJA rja, RestRequest<T> request) {
         final RJABuilder builder = this.rja;
         Pair<Integer, JsonElement> multi = builder.makeRequest(request);
@@ -87,28 +90,31 @@ public class RequestHandler {
     }
 
     private void processQueue() {
-        if(processingQueue || actionQueue.isEmpty())
+        if(processingQueue.get() || actionQueue.isEmpty())
             return;
-        processingQueue = true;
+        processingQueue.set(true);
         new Thread(() -> {
             Iterator<RestAction<?>> iterator = actionQueue.keySet().iterator();
-            while(iterator.hasNext()) {
-                final RestAction<?> action = iterator.next();
+            while (iterator.hasNext()) {
+                RestAction<?> action = iterator.next();
                 final Pair<Consumer<Object>, Consumer<Throwable>> pair = actionQueue.get(action);
+                iterator.remove();
                 try {
                     Object result = action.complete();
-                    if(pair.getFirst() != null) {
+                    if (pair.getFirst() != null) {
                         pair.getFirst().accept(result);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    if(pair.getSecond() != null) {
+                    if (pair.getSecond() != null) {
                         pair.getSecond().accept(e);
                     }
                 }
-                iterator.remove();
             }
-            processingQueue = false;
+            processingQueue.set(false);
+            if(!actionQueue.isEmpty()) {
+                processQueue();
+            }
         }).start();
     }
 
