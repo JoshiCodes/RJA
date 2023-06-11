@@ -12,7 +12,7 @@
     - [Maven](#maven)
 <br><br>
 - [Usage](#usage)
-- [RestActions](#restactions)
+- [RestActions](https://github.com/JoshiCodes/RJA/wiki/Usage#restactions)
 - [Sending Messages](#sending-messages)
 - [EventListeners](#eventlisteners)
 - [Caching](#caching)
@@ -72,31 +72,6 @@ User user = rja.retrieveUser("01GXTJK9Q1JZVR1NZ32CGDCDKN").complete();  // Retri
 
 Message message = rja.retrieveMessage("channelId", "messageId").complete(); // Retrieves a Message by the channel id and the message id.
    
-```
-
-### RestActions
-These methods usually make use of the `RestAction` class. RestActions are used to fetch and handle data async.
-To get the data, you can use the `complete()` method, which *can* block the current thread until the data is fetched.
-If you want to handle the data async, you can use the `queue()` method, which takes a `Consumer<T>` as parameter.
-The queue() method can also be called without any parameters or with two parameters, which are a `Consumer<T>` and a `Consumer<Throwable>`.
-
-```java
-RJA rja = builder.build();
-
-// One Consumer, only for the user
-rja.retrieveUser("userId").queue(user -> {
-    // do stuff with the user
-});
-
-// Two Consumers, one for the user and one for the exception
-rja.retrieveUser("userId").queue(user -> {
-    // do stuff with the user
-}, throwable -> {
-    // handle the exception
-});
-
-// Get the user sync
-User user = rja.retrieveUser("userId").complete();
 ```
 
 ### Sending Messages

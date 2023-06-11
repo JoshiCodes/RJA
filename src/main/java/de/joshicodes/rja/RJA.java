@@ -169,12 +169,28 @@ public abstract class RJA {
         });
     }
 
+    /**
+     * Retrieves a member from the cache or the API.
+     * @param server The server the member is in.
+     * @param user The user of the member.
+     * @return The RestAction containing the member. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the member.
+     */
     public RestAction<Member> retrieveMember(final Server server, final User user) {
         return retrieveMember(server, user.getId());
     }
 
+    /**
+     * Retrieves a member from the cache or the API.
+     * @param server The server the member is in.
+     * @param id The id of the member.
+     * @return The RestAction containing the member. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the member.
+     */
     public RestAction<Member> retrieveMember(final Server server, final String id) {
-        return new RestAction<>(this, () -> new FetchMemberRequest(server.getId(), id));
+        final RJA rja = this;
+        return new SimpleRestAction<>(this, () -> {
+            if(memberCache.containsKey(id)) return memberCache.get(id);
+            else return new RestAction<>(rja, () -> new FetchMemberRequest(server.getId(), id)).complete();
+        });
     }
 
     /**
