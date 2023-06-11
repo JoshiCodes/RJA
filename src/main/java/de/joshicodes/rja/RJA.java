@@ -1,7 +1,6 @@
 package de.joshicodes.rja;
 
 import com.google.gson.JsonObject;
-import de.joshicodes.rja.cache.Cache;
 import de.joshicodes.rja.cache.CacheMap;
 import de.joshicodes.rja.exception.InvalidChannelTypeException;
 import de.joshicodes.rja.exception.RJAPingException;
@@ -29,6 +28,7 @@ import de.joshicodes.rja.requests.rest.user.OpenDirectMessageRequest;
 import de.joshicodes.rja.requests.rest.user.self.FetchSelfRequest;
 import de.joshicodes.rja.rest.EditSelfRestAction;
 import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.rest.SimpleRestAction;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,8 +55,8 @@ public abstract class RJA {
     private final CacheMap<String, Member> memberCache;
     private final CacheMap<String, Message> messageCache;
     private final CacheMap<String, Emoji> emojiCache;
-    private final Cache<GenericChannel> channelCache;
-    private final Cache<Server> serverCache;
+    private final CacheMap<String, GenericChannel> channelCache;
+    private final CacheMap<String, Server> serverCache;
 
     private final FileHandler fileHandler;
 
@@ -79,8 +79,8 @@ public abstract class RJA {
         else emojiCache = null;
 
         if(cachingPolicies.contains(CachingPolicy.SERVER)) {
-            channelCache = new Cache<>();
-            serverCache = new Cache<>();
+            channelCache = new CacheMap<>();
+            serverCache = new CacheMap<>();
         } else {
             channelCache = null;
             serverCache = null;
@@ -115,23 +115,20 @@ public abstract class RJA {
      * @return The RestAction containing the ping in milliseconds. Use {@link RestAction#complete()} or {@link RestAction#queue} to execute the ping request and receive the ping.
      */
     public RestAction<Long> getPing(final int timeout) {
-        return new RestAction<>(this) {
-            @Override
-            protected Long execute() {
-                long start = System.currentTimeMillis();
-                try {
-                    InetAddress[] addresses = InetAddress.getAllByName(getApiUrl().replaceAll("https://", "").replaceAll("http://", ""));
-                    for (InetAddress inetAddress : addresses) {
-                        if (inetAddress.isReachable(timeout)) {
-                            return System.currentTimeMillis() - start;
-                        }
+        return new SimpleRestAction<>(this, () -> {
+            long start = System.currentTimeMillis();
+            try {
+                InetAddress[] addresses = InetAddress.getAllByName(getApiUrl().replaceAll("https://", "").replaceAll("http://", ""));
+                for (InetAddress inetAddress : addresses) {
+                    if (inetAddress.isReachable(timeout)) {
+                        return System.currentTimeMillis() - start;
                     }
-                } catch (IOException e) {
-                    throw new RJAPingException("Cannot Ping Revolt REST-API", e);
                 }
-                throw new RJAPingException("Cannot Ping Revolt REST-API");
+            } catch (IOException e) {
+                throw new RJAPingException("Cannot Ping Revolt REST-API", e);
             }
-        };
+            throw new RJAPingException("Cannot Ping Revolt REST-API");
+        });
     }
 
     public Attachment uploadFile(File file) {
@@ -165,21 +162,7 @@ public abstract class RJA {
      *
      */
     public RestAction<User> retrieveUser(String id) {
-        final RJA rja = this;
-        return new RestAction<>(this) {
-            @Override
-            public User execute() {
-                if(userCache != null) {
-                    // Caching for User is enabled
-                    if(userCache.containsKey(id)) {
-                        return userCache.get(id);
-                    }
-                }
-                // Caching is disabled or user is not found in cache
-                FetchUserRequest request = new FetchUserRequest(id);
-                return getRequestHandler().sendRequest(rja, request);
-            }
-        };
+        return new RestAction<>(this, () -> new FetchUserRequest(id));
     }
 
     public RestAction<Member> retrieveMember(final Server server, final User user) {
@@ -187,21 +170,7 @@ public abstract class RJA {
     }
 
     public RestAction<Member> retrieveMember(final Server server, final String id) {
-        final RJA rja = this;
-        return new RestAction<>(this) {
-            @Override
-            public Member execute() {
-                if(memberCache != null) {
-                    // Caching for Member is enabled
-                    if(memberCache.containsKey(id)) {
-                        return memberCache.get(id);
-                    }
-                }
-                // Caching is disabled or member is not found in cache
-                FetchMemberRequest request = new FetchMemberRequest(server.getId(), id);
-                return getRequestHandler().sendRequest(rja, request);
-            }
-        };
+        return new RestAction<>(this, () -> new FetchMemberRequest(server.getId(), id));
     }
 
     /**
@@ -217,60 +186,15 @@ public abstract class RJA {
     }
 
     public RestAction<Message> retrieveMessage(String channel, String id, boolean forceFetch) {
-        return new RestAction<>(this) {
-            @Override
-            public Message execute() {
-                if(messageCache != null && !forceFetch) {
-                    // Caching for Message is enabled
-                    if(messageCache.containsKey(id)) {
-                        return messageCache.get(id);
-                    }
-                }
-                // Message is not in cache or caching is disabled
-                FetchMessageRequest request = new FetchMessageRequest(channel, id);
-                Message message = getRequestHandler().sendRequest(RJA.this, request);
-                if(messageCache != null) messageCache.put(id, message);  // Cache the message
-                return message;
-            }
-        };
+        return new RestAction<>(this, () -> new FetchMessageRequest(channel, id));
     }
 
     public RestAction<Emoji> retrieveEmoji(String id) {
-        return new RestAction<>(this) {
-            @Override
-            public Emoji execute() {
-                if(emojiCache != null) {
-                    // Caching for Emoji is enabled
-                    if(emojiCache.containsKey(id)) {
-                        Emoji emoji = emojiCache.get(id);
-                        if(emoji != null) return emoji;
-                    }
-                }
-                // Emoji is not in cache or caching is disabled
-                FetchEmojiRequest request = new FetchEmojiRequest(id);
-                return getRequestHandler().sendRequest(RJA.this, request);
-            }
-        };
+        return new RestAction<>(this, () -> new FetchEmojiRequest(id));
     }
 
     public RestAction<DirectChannel> retrieveDirectChannel(String id) {
-        final RJA rja = this;
-        return new RestAction<>(this) {
-            @Override
-            public DirectChannel execute() {
-                if(channelCache != null) {
-                    // Caching for Channel is enabled
-                    GenericChannel c = channelCache.stream().filter(channel -> channel.getId().equals(id)).findFirst().orElse(null);
-                    if(c != null) {
-                        if(c instanceof DirectChannel dc) return dc;
-                        else throw new InvalidChannelTypeException(id, ChannelType.DIRECT_MESSAGE, c.getType());
-                    }
-                }
-                // Caching is disabled or channel is not found in cache
-                OpenDirectMessageRequest request = new OpenDirectMessageRequest(id);
-                return getRequestHandler().sendRequest(rja, request);
-            }
-        };
+        return new RestAction<>(this, () -> new OpenDirectMessageRequest(id));
     }
 
     /**
@@ -280,48 +204,18 @@ public abstract class RJA {
      * @return The RestAction containing the channel. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the channel. Channel can be null.
      */
     public RestAction<GenericChannel> retrieveChannel(String id) {
-        final RJA rja = this;
-        return new RestAction<>(this) {
-            @Override
-            public GenericChannel execute() {
-                if(channelCache != null) {
-                    // Caching for Channel is enabled
-                    GenericChannel c = channelCache.stream().filter(channel -> channel.getId().equals(id)).findFirst().orElse(null);
-                    if(c != null) return c;
-                }
-                // Caching is disabled or channel is not found in cache
-                FetchChannelRequest request = new FetchChannelRequest(id);
-                return getRequestHandler().sendRequest(rja, request);
-            }
-        };
+        return new RestAction<GenericChannel>(this, () -> new FetchChannelRequest(id));
     }
 
-    public RestAction<TextChannel> retrieveTextChannel(String id) {
-        return new RestAction<>(this) {
-            @Override
-            public TextChannel execute() {
-                GenericChannel c = retrieveChannel(id).complete();
-                if(c instanceof TextChannel tc) return tc;
-                return null;
-            }
-        };
+    public TextChannel retrieveTextChannel(String id) {
+        GenericChannel c = retrieveChannel(id).complete();
+        if(c instanceof TextChannel tc) return tc;
+        else throw new InvalidChannelTypeException(id, ChannelType.TEXT_CHANNEL, c.getType());
     }
 
     public RestAction<Server> retrieveServer(String serverId) {
         final RJA rja = this;
-        return new RestAction<>(this) {
-            @Override
-            public Server execute() {
-                if(serverCache != null) {
-                    // Caching for Server is enabled
-                    Server s = serverCache.stream().filter(server -> server.getId().equals(serverId)).findFirst().orElse(null);
-                    if(s != null) return s;
-                }
-                // Caching is disabled or server is not found in cache
-                FetchServerRequest request = new FetchServerRequest(serverId);
-                return getRequestHandler().sendRequest(rja, request);
-            }
-        };
+        return new RestAction<>(this, () -> new FetchServerRequest(serverId));
     }
 
     public void cacheMessage(Message message) {
@@ -365,10 +259,8 @@ public abstract class RJA {
     public GenericChannel cacheChannel(GenericChannel channel) {
         if(channelCache == null) return channel; // Caching is disabled
         if(channel != null) {
-            if(channelCache.stream().anyMatch(ch -> ch.getId().equals(channel.getId()))) {
-                channelCache.stream().filter(ch -> ch.getId().equals(channel.getId())).findFirst().ifPresent(channelCache::remove); // Channel is cached, remove old one
-            }
-            channelCache.add(channel);
+            channelCache.remove(channel.getId());
+            channelCache.put(channel.getId(), channel);
             //getLogger().info("Loaded channel " + c.getName()); // DEBUG
         } else {
             getLogger().warning("Failed to load channel!");
@@ -379,10 +271,8 @@ public abstract class RJA {
     public Server cacheServer(Server cachedServer) {
         if(serverCache == null) return null; // Caching is disabled
         if(cachedServer != null) {
-            if(serverCache.stream().anyMatch(server -> server.getId().equals(cachedServer.getId()))) {
-                serverCache.stream().filter(server -> server.getId().equals(cachedServer.getId())).findFirst().ifPresent(serverCache::remove); // Server is cached, remove old one
-            }
-            serverCache.add(cachedServer);
+            serverCache.remove(cachedServer.getId());
+            serverCache.put(cachedServer.getId(), cachedServer);
             //getLogger().info("Loaded server " + s.getName()); // DEBUG
         } else {
             getLogger().warning("Failed to load server!");
@@ -418,22 +308,16 @@ public abstract class RJA {
      * Retrieves the Channel cache.
      * @return The channel cache or null if the caching policy for {@link CachingPolicy#SERVER} is disabled.
      */
-    public Cache<GenericChannel> getChannelCache() {
+    public CacheMap<String, GenericChannel> getChannelCache() {
         return channelCache;
     }
 
-    public Cache<Server> getServerCache() {
+    public CacheMap<String, Server> getServerCache() {
         return serverCache;
     }
 
     public RestAction<User> retrieveSelfUser() {
-        return new RestAction<>(this) {
-            @Override
-            public User execute() {
-                FetchSelfRequest request = new FetchSelfRequest();
-                return getRequestHandler().sendRequest(RJA.this, request);
-            }
-        };
+        return new RestAction<>(this, FetchSelfRequest::new);
     }
 
     public EditSelfRestAction editSelfUser() {

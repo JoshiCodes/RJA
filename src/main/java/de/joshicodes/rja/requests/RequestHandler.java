@@ -11,7 +11,7 @@ import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.requests.packet.PacketRequest;
 import de.joshicodes.rja.requests.packet.PingRequest;
 import de.joshicodes.rja.requests.rest.RestRequest;
-import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.requests.rest.RestResponse;
 import de.joshicodes.rja.util.Pair;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.framing.CloseFrame;
@@ -60,12 +60,15 @@ public class RequestHandler {
 
     /**
      * Sends a request to the API and returns the result.
-     * This method can block the current thread and should be called in a {@link RestAction}.
+     * This method can block the current thread and should be called in a {@link de.joshicodes.rja.rest.RestAction}.
      * @param rja  The RJA instance
      * @param request The request to send
      * @return The result of the request
      * @param <T> The type of the result
+     *
+     * @deprecated Use {@link #fetchRequest(RJA, RestRequest)} instead
      */
+    @Deprecated(forRemoval = true)
     public <T> T sendRequest(final RJA rja, RestRequest<T> request) {
         final RJABuilder builder = this.rja;
         Pair<Integer, JsonElement> multi = builder.makeRequest(request);
@@ -75,6 +78,28 @@ public class RequestHandler {
             return null;
         }
         return request.fetch(rja, multi.getFirst(), e);
+    }
+
+    public <T> RestResponse<T> fetchRequest(final RJA rja, RestRequest<T> request) {
+        final RJABuilder builder = this.rja;
+        Pair<Integer, JsonElement> multi = builder.makeRequest(request);
+        JsonElement e = multi.getSecond();
+        int code = multi.getFirst();
+        if(e == null) {
+            return null;
+        }
+        boolean isRatelimit = code == 429;
+        if(isRatelimit) {
+            if(e.isJsonObject()) {
+                JsonObject o = e.getAsJsonObject();
+                if(o.has("retry_after")) {
+                    long retryAfter = o.get("retry_after").getAsLong();
+                    return new RestResponse<>(null, code, retryAfter);  // Invalid Response, but ratelimited
+                }
+            }
+            return new RestResponse<>(null, code, 0);  // Invalid Response, but the ratelimit is unknown
+        }
+        return new RestResponse<>(request.fetch(rja, multi.getFirst(), e), code, -1);  // Valid response, no ratelimit
     }
 
     public void sendRequest(PacketRequest request) {

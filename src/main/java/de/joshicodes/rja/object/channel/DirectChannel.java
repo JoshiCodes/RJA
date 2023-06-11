@@ -3,7 +3,7 @@ package de.joshicodes.rja.object.channel;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
-import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.rest.SimpleRestAction;
 import de.joshicodes.rja.util.JsonUtil;
 
 import javax.annotation.Nullable;
@@ -60,7 +60,7 @@ public abstract class DirectChannel extends GenericChannel {
     abstract public String getLastMessageId();
 
     @Override
-    public RestAction<Void> close() {
+    public SimpleRestAction<Void> close() {
         // TODO
         return null;
     }

@@ -1,99 +1,118 @@
 package de.joshicodes.rja.rest;
 
 import de.joshicodes.rja.RJA;
+import de.joshicodes.rja.exception.RatelimitException;
+import de.joshicodes.rja.requests.RequestHandler;
+import de.joshicodes.rja.requests.rest.RestRequest;
+import de.joshicodes.rja.requests.rest.RestResponse;
+import de.joshicodes.rja.util.Pair;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-public abstract class RestAction<T> {
+public class RestAction<R> {
 
-    private final boolean canMultiple;
-    private boolean executed = false;
+    public static final int MAX_ATTEMPTS = 4;
 
     private final RJA rja;
+    protected Supplier<RestRequest<R>> request;
 
-    public RestAction(RJA rja) {
-        this(rja, false);
-    }
-
-    public RestAction(RJA rja, boolean canMultiple) {
+    public RestAction(RJA rja, Supplier<RestRequest<R>> request) {
         this.rja = rja;
-        this.canMultiple = canMultiple;
+        this.request = request;
     }
 
-    public RJA getRJA() {
-        return rja;
-    }
-
-    protected abstract T execute();
-
-    /**
-     * Executes the action and returns the result.
-     * <b>This Method can block your current thread.</b>
-     * @return The result of the action.
-     */
-    public T complete() {
-        if (!canMultiple && executed) {
-            throw new IllegalStateException("This action can only be executed once.");
+    protected Pair<Long, R> execute() throws Exception {
+        RequestHandler handler = rja.getRequestHandler();
+        RestResponse<R> response = handler.fetchRequest(rja, request.get());
+        if(response == null) {
+            return null;
         }
-        this.executed = true;
-        return execute();
+        return new Pair<>(response.retryAfter(), response.object());
     }
 
-    /**
-     * Queues the action to be executed in a new thread.
-     * If you need to handle the result or exception, use {@link #queue(Consumer)} or {@link #queue(Consumer, Consumer)}.
-     *
-     * @see #queue(Consumer)
-     * @see #queue(Consumer, Consumer)
-     * @see #complete()
-     */
+    public R complete() {
+        int attempts = 0;
+        long retryAfter = 0;
+        while (attempts < MAX_ATTEMPTS) {
+            try {
+                Pair<Long, R> result = execute();
+                if(result == null) {
+                    // Failed to get a result, throw an exception
+                    throw new RatelimitException(this, request.get());
+                }
+                retryAfter = result.getFirst();
+                if(retryAfter == -1) {
+                    // Successfully got a result, call the success consumer and return
+                    return result.getSecond();
+                }
+                // Got ratelimited, wait and try again
+                try {
+                    Thread.sleep(retryAfter);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                attempts++;
+            } catch (Exception e) {
+                // Failed to get a result
+                e.printStackTrace();
+                continue;
+            }
+        }
+        throw new RatelimitException(this, request.get());
+    }
+
     public void queue() {
-        queue(null);
+        queue(null, null);
     }
 
-    /**
-     * Queues the action to be executed in a new thread.
-     * If finished, the success consumer will be called.
-     * @param success The success consumer, can be null. If you do not want to handle the result, use {@link #queue()}.
-     *
-     * @see #queue()
-     * @see #queue(Consumer, Consumer)
-     * @see #complete()
-     */
-    public void queue(@Nullable Consumer<T> success) {
+    public void queue(Consumer<R> success) {
         queue(success, null);
     }
 
-    /**
-     * Queues the action to be executed in a new thread.
-     * If finished, the success consumer will be called.
-     * If an exception occurs, the failure consumer will be called.
-     * @param success The success consumer, can be null. If you do not want to handle the result, use {@link #queue()}.
-     * @param failure The failure consumer, can be null. If you do not want to handle the exception, use {@link #queue()} or {@link #queue(Consumer)}.
-     *
-     * @see #queue()
-     * @see #queue(Consumer)
-     * @see #complete()
-     */
-    public void queue(@Nullable Consumer<T> success, @Nullable Consumer<Throwable> failure) {
+    public void queue(Consumer<R> success, Consumer<Throwable> failure) {
+        final RestAction<R> action = this;
         new Thread(() -> {
-            try {
-                T t = complete();
-                if (success != null) {
-                    success.accept(t);
+            int attempts = 0;
+            long retryAfter = 0;
+            while (attempts < MAX_ATTEMPTS) {
+                try {
+                    Pair<Long, R> result = execute();
+                    if(result == null) {
+                        // Failed to get a result, throw an exception
+                        throw new RatelimitException(action, request.get());
+                    }
+                    retryAfter = result.getFirst();
+                    if(retryAfter == -1) {
+                        // Successfully got a result, call the success consumer and return
+                        if(success != null) {
+                            success.accept(result.getSecond());
+                        }
+                        return;
+                    }
+                    // Got ratelimited, wait and try again
+                    try {
+                        Thread.sleep(retryAfter + 100); // Add 100ms to the ratelimit to make sure it's over
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    attempts++;
+                } catch (Exception e) {
+                    // Failed to get a result
+                    e.printStackTrace();
+                    continue;
                 }
-            } catch (Exception exception) {
-                if (failure != null) {
-                    failure.accept(exception);
-                }
+            }
+            if(failure != null) {
+                failure.accept(new RatelimitException(action, request.get()));
             }
         }).start();
     }
 
-    public CompletableFuture<T> submit() {
-        return CompletableFuture.supplyAsync(this::execute);
+    public RJA getRJA() {
+        return rja;
     }
 
 }

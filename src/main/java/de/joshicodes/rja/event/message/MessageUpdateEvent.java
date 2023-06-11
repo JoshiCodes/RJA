@@ -7,6 +7,7 @@ import de.joshicodes.rja.object.channel.GenericChannel;
 import de.joshicodes.rja.object.channel.ServerChannel;
 import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.server.Server;
+import de.joshicodes.rja.requests.rest.RestResponse;
 import de.joshicodes.rja.requests.rest.message.FetchMessageRequest;
 
 import javax.annotation.Nullable;
@@ -55,11 +56,14 @@ public class MessageUpdateEvent extends IncomingEvent {
         Message message;
         if(!inCache) {
             // Message not in cache, cannot update with partial data -> fetch full message
-            message = rja.getRequestHandler().sendRequest(rja, new FetchMessageRequest(channel, id));
+            RestResponse<Message> response = rja.getRequestHandler().fetchRequest(rja, new FetchMessageRequest(channel, id));
+            if(response.isOk()) {
+                message = response.object();
+            } else return null;
         } else message = rja.getMessageCache().getIf(m -> m.equals(id));
         Message updated = Message.from(rja, object.get("data").getAsJsonObject(), message);
         rja.cacheMessage(updated);
-        return new MessageUpdateEvent(rja, rja.getChannelCache().getIf(c -> c.getId().equals(channel)), updated);
+        return new MessageUpdateEvent(rja, rja.getChannelCache().get(channel), updated);
     }
 
     @Override

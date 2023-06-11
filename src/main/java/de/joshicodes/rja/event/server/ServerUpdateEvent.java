@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.object.server.Server;
+import de.joshicodes.rja.requests.rest.RestResponse;
 import de.joshicodes.rja.requests.rest.server.FetchServerRequest;
 
 public class ServerUpdateEvent extends IncomingEvent {
@@ -20,16 +21,21 @@ public class ServerUpdateEvent extends IncomingEvent {
     public IncomingEvent handle(RJA rja, JsonObject object) {
 
         String id = object.get("id").getAsString();
-        boolean inCache = rja.getServerCache().containsIf(s -> s.getId().equals(id));
+        boolean inCache = rja.getServerCache().containsKey(id);
         if(!inCache) {
             // Server not in cache, cannot update with partial data -> fetch full server
             FetchServerRequest request = new FetchServerRequest(id);
-            Server server = rja.getRequestHandler().sendRequest(rja, request);
-            return new ServerUpdateEvent(rja, server);
+            RestResponse<Server> response = rja.getRequestHandler().fetchRequest(rja, request);
+            if(response.isOk()) {
+                Server server = response.object();
+                return new ServerUpdateEvent(rja, server);
+            }
         }
 
-        Server server = rja.getServerCache().getIf(s -> s.getId().equals(id));
-        server.update(object);
+        Server server = rja.getServerCache().get(id);
+        if(server != null) {
+            server.update(object);
+        }
         return new ServerUpdateEvent(rja, rja.cacheServer(server));
 
     }

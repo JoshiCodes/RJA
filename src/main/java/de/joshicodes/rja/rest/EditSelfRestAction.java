@@ -5,13 +5,14 @@ import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.object.user.User;
 import de.joshicodes.rja.object.user.UserStatus;
 import de.joshicodes.rja.requests.rest.user.self.EditSelfUserRequest;
+import de.joshicodes.rja.util.Pair;
 
-public class EditSelfRestAction extends RestAction<User> {
+public class EditSelfRestAction extends SimpleRestAction<User> {
 
     private final EditSelfUserRequest request;
 
     public EditSelfRestAction(RJA rja) {
-        super(rja);
+        super(rja, () -> null);
         request = new EditSelfUserRequest(rja);
     }
 
@@ -40,8 +41,9 @@ public class EditSelfRestAction extends RestAction<User> {
     }
 
     @Override
-    protected User execute() {
-        return getRJA().getRequestHandler().sendRequest(getRJA(), request);
+    protected Pair<Long, User> execute() throws Exception {
+        super.request = () -> request;
+        return super.execute();
     }
 
 }

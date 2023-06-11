@@ -18,11 +18,11 @@ public class MessageSendRequest extends RestRequest<Message> {
             return null;
         Message m = Message.from(rja, data.getAsJsonObject(), null);
         rja.cacheMessage(m);
-        rja.getChannelCache().stream().filter(c -> c.getId().equals(m.getChannelId())).findFirst().ifPresent(c -> {
-            if(c instanceof TextChannel tc) {
+        if(rja.getChannelCache().containsKey(m.getChannelId())) {
+            if(rja.getChannelCache().get(m.getChannelId()) instanceof TextChannel tc) {
                 tc.getCachedHistory().add(m.getId());
             }
-        });
+        }
         return m;
     }
 

@@ -6,6 +6,7 @@ import de.joshicodes.rja.object.message.Message;
 import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.requests.rest.message.EditMessageRequest;
 import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class MessageEditAction extends RestAction<Message> {
     private List<Attachment> attachments;
 
     public MessageEditAction(final RJA rja, final Message message) {
-        super(rja);
+        super(rja, () -> null);
         this.message = message;
     }
 
@@ -62,7 +63,7 @@ public class MessageEditAction extends RestAction<Message> {
     }
 
     @Override
-    protected Message execute() {
+    protected Pair<Long, Message> execute() throws Exception {
 
         if(!message.getAuthorId().equals(getRJA().retrieveSelfUser().complete().getId())) {
             throw new UnsupportedOperationException("Cannot edit a message that was not sent by the current user!");
@@ -70,9 +71,11 @@ public class MessageEditAction extends RestAction<Message> {
 
         EditMessageRequest request = new EditMessageRequest(message, content, embeds, attachments);
         if(!request.hasData() || (!request.hasData("content") && !request.hasData("embeds"))) {
-            return message; // Nothing to edit, return original message
+            return new Pair<>(-1L, message); // Nothing to edit, return original message
         }
-        return getRJA().getRequestHandler().sendRequest(getRJA(), request);
-    }
 
+        super.request = () -> request;
+        return super.execute();
+
+    }
 }

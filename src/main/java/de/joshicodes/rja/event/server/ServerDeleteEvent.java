@@ -3,6 +3,7 @@ package de.joshicodes.rja.event.server;
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
 import de.joshicodes.rja.cache.Cache;
+import de.joshicodes.rja.cache.CacheMap;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.object.server.Server;
 
@@ -26,9 +27,9 @@ public class ServerDeleteEvent extends IncomingEvent {
     @Override
     public IncomingEvent handle(RJA rja, JsonObject object) {
         String id = object.get("id").getAsString();
-        Cache<Server> cache = rja.getServerCache();
+        CacheMap<String, Server> cache = rja.getServerCache();
         if(cache != null)
-            cache.stream().filter(server -> server.getId().equals(id)).forEach(cache::remove);
+            cache.remove(id);
         return new ServerDeleteEvent(rja, id);
     }
 

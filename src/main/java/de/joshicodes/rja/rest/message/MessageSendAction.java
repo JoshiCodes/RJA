@@ -10,6 +10,7 @@ import de.joshicodes.rja.object.message.embed.MessageEmbed;
 import de.joshicodes.rja.object.user.Masquerade;
 import de.joshicodes.rja.requests.rest.message.MessageSendRequest;
 import de.joshicodes.rja.rest.RestAction;
+import de.joshicodes.rja.util.Pair;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +28,7 @@ public class MessageSendAction extends RestAction<Message> {
     // TODO: Interactions
 
     public MessageSendAction(final RJA rja, final String receiver) {
-        super(rja);
+        super(rja, () -> null);
         this.receiver = receiver;
     }
 
@@ -64,7 +65,7 @@ public class MessageSendAction extends RestAction<Message> {
     }
 
     @Override
-    protected Message execute() {
+    protected Pair<Long, Message> execute() throws Exception {
 
         MessageSendRequest request = new MessageSendRequest(receiver);
         if(content != null) {
@@ -110,7 +111,8 @@ public class MessageSendAction extends RestAction<Message> {
         headers.put("Idempotency-Key", nonce);
         request.setHeaders(headers);
 
-        return getRJA().getRequestHandler().sendRequest(getRJA(), request);
-    }
+        super.request = () -> request;
+        return super.execute();
 
+    }
 }

@@ -83,14 +83,8 @@ public class Server {
      * @param excludeOffline Whether to exclude offline members.
      * @return A {@link RestAction} that retrieves a {@link HashMap} of {@link User}s and {@link Member}s.
      */
-    public RestAction<HashMap<User, Member>> retrieveAllMembers(boolean excludeOffline) {
-        return new RestAction<>(rja) {
-            @Override
-            protected HashMap<User, Member> execute() {
-                FetchAllMembersRequest request = new FetchAllMembersRequest(id, excludeOffline);
-                return rja.getRequestHandler().sendRequest(rja, request);
-            }
-        };
+    public RestAction<HashMap<User, Member>> retrieveAllMembers(final boolean excludeOffline) {
+        return new RestAction<>(rja, () -> new FetchAllMembersRequest(id, excludeOffline));
     }
 
     public RJA getRJA() {
