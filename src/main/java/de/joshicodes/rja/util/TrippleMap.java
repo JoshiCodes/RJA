@@ -1,6 +1,7 @@
 package de.joshicodes.rja.util;
 
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * If you just need a simple Map use {@link java.util.HashMap} or {@link java.util.TreeMap}.
@@ -58,6 +59,14 @@ public class TrippleMap<K, B, C> {
 
     public void clear() {
         map.clear();
+    }
+
+    public int size() {
+        return map.size();
+    }
+
+    public Set<K> keySet() {
+        return map.keySet();
     }
 
     public Pair<B, C> get(K key) {
