@@ -12,6 +12,7 @@ import de.joshicodes.rja.requests.packet.PacketRequest;
 import de.joshicodes.rja.requests.packet.PingRequest;
 import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.requests.rest.RestResponse;
+import de.joshicodes.rja.rest.RestAction;
 import de.joshicodes.rja.util.Pair;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.framing.CloseFrame;
@@ -22,6 +23,7 @@ import java.lang.reflect.Parameter;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class RequestHandler {
 
@@ -33,10 +35,14 @@ public class RequestHandler {
     private final List<EventListener> listeners;
     private final List<IncomingEvent> events;
 
+    private final HashMap<RestAction<?>, Pair<Consumer<Object>, Consumer<Throwable>>> actionQueue;
+    private boolean processingQueue = false;
+
     public RequestHandler(RJABuilder rja, List<EventListener> listeners, List<IncomingEvent> events) throws URISyntaxException {
         this.rja = rja;
         this.listeners = listeners;
         this.events = events;
+        this.actionQueue = new HashMap<>();
         rja.getLogger().info("Connecting...");
         this.socket = new RequestSocket(this);
     }
@@ -68,7 +74,7 @@ public class RequestHandler {
      *
      * @deprecated Use {@link #fetchRequest(RJA, RestRequest)} instead
      */
-    @Deprecated(forRemoval = true)
+    @Deprecated(forRemoval = true, since = "1.1-alpha.1")
     public <T> T sendRequest(final RJA rja, RestRequest<T> request) {
         final RJABuilder builder = this.rja;
         Pair<Integer, JsonElement> multi = builder.makeRequest(request);
@@ -78,6 +84,37 @@ public class RequestHandler {
             return null;
         }
         return request.fetch(rja, multi.getFirst(), e);
+    }
+
+    private void processQueue() {
+        if(processingQueue || actionQueue.isEmpty())
+            return;
+        processingQueue = true;
+        new Thread(() -> {
+            Iterator<RestAction<?>> iterator = actionQueue.keySet().iterator();
+            while(iterator.hasNext()) {
+                final RestAction<?> action = iterator.next();
+                final Pair<Consumer<Object>, Consumer<Throwable>> pair = actionQueue.get(action);
+                try {
+                    Object result = action.complete();
+                    if(pair.getFirst() != null) {
+                        pair.getFirst().accept(result);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if(pair.getSecond() != null) {
+                        pair.getSecond().accept(e);
+                    }
+                }
+                iterator.remove();
+            }
+            processingQueue = false;
+        }).start();
+    }
+
+    public void queueRequest(RestAction<?> action, Consumer<Object> success, Consumer<Throwable> failure) {
+        actionQueue.put(action, new Pair<>(success, failure));
+        processQueue();
     }
 
     public <T> RestResponse<T> fetchRequest(final RJA rja, RestRequest<T> request) {

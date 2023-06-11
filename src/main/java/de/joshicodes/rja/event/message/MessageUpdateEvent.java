@@ -56,9 +56,11 @@ public class MessageUpdateEvent extends IncomingEvent {
         Message message;
         if(!inCache) {
             // Message not in cache, cannot update with partial data -> fetch full message
-            RestResponse<Message> response = rja.getRequestHandler().fetchRequest(rja, new FetchMessageRequest(channel, id));
-            if(response.isOk()) {
-                message = response.object();
+            if(channel != null && id != null) {
+                RestResponse<Message> response = rja.getRequestHandler().fetchRequest(rja, new FetchMessageRequest(channel, id));
+                if(response.isOk()) {
+                    message = response.object();
+                } else return null;
             } else return null;
         } else message = rja.getMessageCache().getIf(m -> m.equals(id));
         Message updated = Message.from(rja, object.get("data").getAsJsonObject(), message);

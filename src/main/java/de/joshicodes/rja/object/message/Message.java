@@ -373,6 +373,7 @@ public abstract class Message {
             AddReactionRequest request = new AddReactionRequest(getChannelId(), getId(), emoji);
             getRJA().getRequestHandler().fetchRequest(getRJA(), request);
             MessageReaction reaction = getReaction(emoji);
+            if(reaction == null) return null;
             reaction.addReaction(getRJA().retrieveSelfUser().complete().getId());
             return reaction;
         });

@@ -162,7 +162,11 @@ public abstract class RJA {
      *
      */
     public RestAction<User> retrieveUser(String id) {
-        return new RestAction<>(this, () -> new FetchUserRequest(id));
+        final RJA rja = this;
+        return new SimpleRestAction<>(this, () -> {
+            if(userCache.containsKey(id)) return userCache.get(id);
+            else return new RestAction<>(rja, () -> new FetchUserRequest(id)).complete();
+        });
     }
 
     public RestAction<Member> retrieveMember(final Server server, final User user) {
@@ -186,15 +190,30 @@ public abstract class RJA {
     }
 
     public RestAction<Message> retrieveMessage(String channel, String id, boolean forceFetch) {
-        return new RestAction<>(this, () -> new FetchMessageRequest(channel, id));
+        if(channel == null || channel.isEmpty() || id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("Channel and ID cannot be null or empty");
+        }
+        final RJA rja = this;
+        return new SimpleRestAction<>(this, () -> {
+            if(messageCache.containsKey(id) && !forceFetch) return messageCache.get(id);
+            else return new RestAction<>(rja, () -> new FetchMessageRequest(channel, id)).complete();
+        });
     }
 
     public RestAction<Emoji> retrieveEmoji(String id) {
-        return new RestAction<>(this, () -> new FetchEmojiRequest(id));
+        final RJA rja = this;
+        return new SimpleRestAction<>(this, () -> {
+            if(emojiCache.containsKey(id)) return emojiCache.get(id);
+            else return new RestAction<>(rja, () -> new FetchEmojiRequest(id)).complete();
+        });
     }
 
     public RestAction<DirectChannel> retrieveDirectChannel(String id) {
-        return new RestAction<>(this, () -> new OpenDirectMessageRequest(id));
+        final RJA rja = this;
+        return new SimpleRestAction<>(this, () -> {
+            if(channelCache.containsKey(id) && channelCache.get(id) instanceof DirectChannel direct) return direct;
+            else return new RestAction<>(rja, () -> new OpenDirectMessageRequest(id)).complete();
+        });
     }
 
     /**
@@ -204,10 +223,14 @@ public abstract class RJA {
      * @return The RestAction containing the channel. Use {@link RestAction#complete()} or {@link RestAction#queue} to get the channel. Channel can be null.
      */
     public RestAction<GenericChannel> retrieveChannel(String id) {
-        return new RestAction<GenericChannel>(this, () -> new FetchChannelRequest(id));
+        final RJA rja = this;
+        return new SimpleRestAction<>(this, () -> {
+            if(channelCache.containsKey(id)) return channelCache.get(id);
+            else return new RestAction<>(rja, () -> new FetchChannelRequest(id)).complete();
+        });
     }
 
-    public TextChannel retrieveTextChannel(String id) {
+    public TextChannel getTextChannel(String id) {
         GenericChannel c = retrieveChannel(id).complete();
         if(c instanceof TextChannel tc) return tc;
         else throw new InvalidChannelTypeException(id, ChannelType.TEXT_CHANNEL, c.getType());
@@ -215,7 +238,10 @@ public abstract class RJA {
 
     public RestAction<Server> retrieveServer(String serverId) {
         final RJA rja = this;
-        return new RestAction<>(this, () -> new FetchServerRequest(serverId));
+        return new SimpleRestAction<>(this, () -> {
+            if(serverCache.containsKey(serverId)) return serverCache.get(serverId);
+            else return new RestAction<>(rja, () -> new FetchServerRequest(serverId)).complete();
+        });
     }
 
     public void cacheMessage(Message message) {

@@ -7,9 +7,7 @@ import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.requests.rest.RestResponse;
 import de.joshicodes.rja.util.Pair;
 
-import javax.annotation.Nullable;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class RestAction<R> {
@@ -36,7 +34,7 @@ public class RestAction<R> {
     public R complete() {
         int attempts = 0;
         long retryAfter = 0;
-        while (attempts < MAX_ATTEMPTS) {
+        while (retryAfter != -1 && attempts < MAX_ATTEMPTS) {
             try {
                 Pair<Long, R> result = execute();
                 if(result == null) {
@@ -48,18 +46,18 @@ public class RestAction<R> {
                     // Successfully got a result, call the success consumer and return
                     return result.getSecond();
                 }
-                // Got ratelimited, wait and try again
-                try {
-                    Thread.sleep(retryAfter);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                attempts++;
             } catch (Exception e) {
                 // Failed to get a result
                 e.printStackTrace();
                 continue;
             }
+            // Got ratelimited, wait and try again
+            try {
+                Thread.sleep(retryAfter);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            attempts++;
         }
         throw new RatelimitException(this, request.get());
     }
@@ -73,42 +71,7 @@ public class RestAction<R> {
     }
 
     public void queue(Consumer<R> success, Consumer<Throwable> failure) {
-        final RestAction<R> action = this;
-        new Thread(() -> {
-            int attempts = 0;
-            long retryAfter = 0;
-            while (attempts < MAX_ATTEMPTS) {
-                try {
-                    Pair<Long, R> result = execute();
-                    if(result == null) {
-                        // Failed to get a result, throw an exception
-                        throw new RatelimitException(action, request.get());
-                    }
-                    retryAfter = result.getFirst();
-                    if(retryAfter == -1) {
-                        // Successfully got a result, call the success consumer and return
-                        if(success != null) {
-                            success.accept(result.getSecond());
-                        }
-                        return;
-                    }
-                    // Got ratelimited, wait and try again
-                    try {
-                        Thread.sleep(retryAfter + 100); // Add 100ms to the ratelimit to make sure it's over
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    attempts++;
-                } catch (Exception e) {
-                    // Failed to get a result
-                    e.printStackTrace();
-                    continue;
-                }
-            }
-            if(failure != null) {
-                failure.accept(new RatelimitException(action, request.get()));
-            }
-        }).start();
+       rja.getRequestHandler().queueRequest(this, (Consumer<Object>) success, failure);
     }
 
     public RJA getRJA() {
