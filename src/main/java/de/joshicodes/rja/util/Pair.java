@@ -5,7 +5,7 @@ package de.joshicodes.rja.util;
  * @param <B> The first value
  * @param <C> The second value
  */
-public record MultiObject<B, C>(B first, C second) {
+public record Pair<B, C>(B first, C second) {
 
     public B getFirst() {
         return first;

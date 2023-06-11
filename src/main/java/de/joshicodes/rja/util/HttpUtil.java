@@ -20,11 +20,11 @@ public class HttpUtil {
     public static final String AUTH_HEADER_BOT = "X-Bot-Token";
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 OPR/77.0.4054.203";
 
-    public static MultiObject<Integer, JsonElement> sendRequest(String url, String method, @Nullable String authHeader, @Nullable String auth, JsonElement body) throws IOException, InterruptedException {
+    public static Pair<Integer, JsonElement> sendRequest(String url, String method, @Nullable String authHeader, @Nullable String auth, JsonElement body) throws IOException, InterruptedException {
         return sendRequest(url, method, authHeader, auth, body, null);
     }
 
-    public static MultiObject<Integer, JsonElement> sendRequest(String url, String method, @Nullable String authHeader, @Nullable String auth, JsonElement body, @Nullable HashMap<String, String> headers) throws IOException, InterruptedException {
+    public static Pair<Integer, JsonElement> sendRequest(String url, String method, @Nullable String authHeader, @Nullable String auth, JsonElement body, @Nullable HashMap<String, String> headers) throws IOException, InterruptedException {
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest.Builder request = HttpRequest.newBuilder();
@@ -53,10 +53,10 @@ public class HttpUtil {
 
         String res = response.body();
         if(res == null || res.isEmpty() && (code < 200 || code >= 300)) {
-            return new MultiObject<>(code, null);
+            return new Pair<>(code, null);
         }
         if(!res.startsWith("{") && !res.startsWith("[")) {
-            return new MultiObject<>(code, null);
+            return new Pair<>(code, null);
         }
         JsonElement e = JsonParser.parseString(res);
 
@@ -64,7 +64,7 @@ public class HttpUtil {
             e = new JsonObject();
         }
 
-        return new MultiObject<>(code, e);
+        return new Pair<>(code, e);
 
     }
 

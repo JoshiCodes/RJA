@@ -10,18 +10,18 @@ import java.util.HashMap;
  */
 public class TrippleMap<K, B, C> {
 
-    private final HashMap<K, MultiObject<B, C>> map;
+    private final HashMap<K, Pair<B, C>> map;
 
     public TrippleMap() {
         map = new HashMap<>();
     }
 
     public void put(K key, B b, C c) {
-        map.put(key, new MultiObject<>(b, c));
+        map.put(key, new Pair<>(b, c));
     }
 
-    public void put(K key, MultiObject<B, C> multiObject) {
-        map.put(key, multiObject);
+    public void put(K key, Pair<B, C> pair) {
+        map.put(key, pair);
     }
 
     public void remove(K key) {
@@ -33,38 +33,38 @@ public class TrippleMap<K, B, C> {
     }
 
     public boolean containsFirst(K key, B b) {
-        MultiObject<B, C> multiObject = map.get(key);
-        if(multiObject == null) return false;
-        return multiObject.getFirst().equals(b);
+        Pair<B, C> pair = map.get(key);
+        if(pair == null) return false;
+        return pair.getFirst().equals(b);
     }
 
     public boolean containsSecond(K key, C c) {
-        MultiObject<B, C> multiObject = map.get(key);
-        if(multiObject == null) return false;
-        return multiObject.getSecond().equals(c);
+        Pair<B, C> pair = map.get(key);
+        if(pair == null) return false;
+        return pair.getSecond().equals(c);
     }
 
     public B getFirst(K key) {
-        MultiObject<B, C> multiObject = map.get(key);
-        if(multiObject == null) return null;
-        return multiObject.getFirst();
+        Pair<B, C> pair = map.get(key);
+        if(pair == null) return null;
+        return pair.getFirst();
     }
 
     public C getSecond(K key) {
-        MultiObject<B, C> multiObject = map.get(key);
-        if(multiObject == null) return null;
-        return multiObject.getSecond();
+        Pair<B, C> pair = map.get(key);
+        if(pair == null) return null;
+        return pair.getSecond();
     }
 
     public void clear() {
         map.clear();
     }
 
-    public MultiObject<B, C> get(K key) {
+    public Pair<B, C> get(K key) {
         return map.get(key);
     }
 
-    public HashMap<K, MultiObject<B, C>> getMap() {
+    public HashMap<K, Pair<B, C>> getMap() {
         return map;
     }
 

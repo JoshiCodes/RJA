@@ -1,6 +1,6 @@
 package de.joshicodes.rja.cache;
 
-import de.joshicodes.rja.util.MultiObject;
+import de.joshicodes.rja.util.Pair;
 import de.joshicodes.rja.util.TrippleMap;
 
 import java.util.HashMap;
@@ -23,13 +23,13 @@ public class CacheMap<K, T> {
     }
 
     public T get(K key) {
-        MultiObject<T, Long> multiObject = map.get(key);
-        if(multiObject == null) return null;
-        if(multiObject.getSecond() < System.currentTimeMillis()) {
+        Pair<T, Long> pair = map.get(key);
+        if(pair == null) return null;
+        if(pair.getSecond() < System.currentTimeMillis()) {
             map.remove(key);
             return null;
         }
-        return multiObject.getFirst();
+        return pair.getFirst();
     }
 
     public void remove(K key) {

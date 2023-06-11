@@ -17,7 +17,7 @@ import de.joshicodes.rja.requests.RequestHandler;
 import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.util.HttpUtil;
 import de.joshicodes.rja.util.JsonUtil;
-import de.joshicodes.rja.util.MultiObject;
+import de.joshicodes.rja.util.Pair;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -304,7 +304,7 @@ public class RJABuilder {
 
     }
 
-    public <T> MultiObject<Integer, JsonElement> makeRequest(RestRequest<T> request) {
+    public <T> Pair<Integer, JsonElement> makeRequest(RestRequest<T> request) {
         try {
             return HttpUtil.sendRequest(
                     apiUrl + request.getEndpoint(),
