@@ -71,7 +71,7 @@ public class RestAction<R> {
     }
 
     public void queue(Consumer<R> success, Consumer<Throwable> failure) {
-       rja.getRequestHandler().queueRequest(this, (Consumer<Object>) success, failure);
+       rja.getRequestHandler().queueRequest(this, success, failure);
     }
 
     public RJA getRJA() {

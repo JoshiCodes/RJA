@@ -220,6 +220,8 @@ public class RJABuilder {
      */
     public RJA build() throws URISyntaxException {
 
+        if(token == null) throw new NullPointerException("Token cannot be null");
+
         if(build != null) return build;
 
         final Thread thread = Thread.currentThread();

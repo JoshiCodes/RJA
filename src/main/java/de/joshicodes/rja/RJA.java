@@ -253,9 +253,13 @@ public abstract class RJA {
     }
 
     public RestAction<Server> retrieveServer(String serverId) {
+        return retrieveServer(serverId, false);
+    }
+
+    public RestAction<Server> retrieveServer(String serverId, boolean forceFetch) {
         final RJA rja = this;
         return new SimpleRestAction<>(this, () -> {
-            if(serverCache.containsKey(serverId)) return serverCache.get(serverId);
+            if(serverCache.containsKey(serverId) && !forceFetch) return serverCache.get(serverId);
             else return new RestAction<>(rja, () -> new FetchServerRequest(serverId)).complete();
         });
     }
