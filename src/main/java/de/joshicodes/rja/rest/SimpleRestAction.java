@@ -1,7 +1,6 @@
 package de.joshicodes.rja.rest;
 
 import de.joshicodes.rja.RJA;
-import de.joshicodes.rja.requests.rest.RestRequest;
 import de.joshicodes.rja.util.Pair;
 
 import java.util.function.Supplier;
