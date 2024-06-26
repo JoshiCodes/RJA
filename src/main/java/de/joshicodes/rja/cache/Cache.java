@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 public class Cache<T> {
 
     public static final long DEFAULT_LIFESPAN = TimeUnit.HOURS.toMillis(1);
-    public static final int DEFAULT_MAX_SIZE = 1000;
+    public static final int DEFAULT_MAX_SIZE = 500;
     public static final long DEFAULT_CLEAR_INTERVAL = TimeUnit.MINUTES.toMillis(1); // 1 Minute
 
     private final int maxSize;
@@ -28,9 +28,11 @@ public class Cache<T> {
      * Clears all expired entries one time
      */
     public void clearExpired() {
-        if ((System.currentTimeMillis() - lastClear) < DEFAULT_CLEAR_INTERVAL) return;
-        list.keySet().stream().filter(t -> list.get(t) < System.currentTimeMillis()).forEach(list::remove);
-        lastClear = System.currentTimeMillis();
+        try {
+            if (size() >= getMaxSize() || (System.currentTimeMillis() - lastClear) < DEFAULT_CLEAR_INTERVAL) return;
+            list.keySet().stream().filter(t -> list.get(t) < System.currentTimeMillis()).forEach(list::remove);
+            lastClear = System.currentTimeMillis();
+        } catch (Exception ignored) { } // TODO: Identify why this exception is thrown (ConcurrentModificationException)
     }
 
     public void add(T t, long lifespan) {
@@ -125,6 +127,10 @@ public class Cache<T> {
      */
     public HashMap<T, Long> getList() {
         return list;
+    }
+
+    public int size() {
+        return list.size();
     }
 
 }

@@ -3,6 +3,7 @@ package de.joshicodes.rja.cache;
 import de.joshicodes.rja.util.Pair;
 import de.joshicodes.rja.util.TrippleMap;
 
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.function.Predicate;
 
@@ -26,9 +27,11 @@ public class CacheMap<K, T> {
      * Clears all expired entries one time
      */
     public void clearExpired() {
-        if((System.currentTimeMillis() - lastClear) < Cache.DEFAULT_CLEAR_INTERVAL) return;
-        map.keySet().stream().filter(t -> map.get(t).getSecond() < System.currentTimeMillis()).forEach(map::remove);
-        lastClear = System.currentTimeMillis();
+        try {
+            if((System.currentTimeMillis() - lastClear) < Cache.DEFAULT_CLEAR_INTERVAL) return;
+            map.keySet().stream().filter(t -> map.get(t).getSecond() < System.currentTimeMillis()).forEach(map::remove);
+            lastClear = System.currentTimeMillis();
+        } catch (Exception ignored) { }  // TODO: Identify why this exception is thrown (ConcurrentModificationException)
     }
 
 
@@ -107,6 +110,10 @@ public class CacheMap<K, T> {
 
     public TrippleMap<K, T, Long> getMap() {
         return map;
+    }
+
+    public int size() {
+        return map.size();
     }
 
 }
