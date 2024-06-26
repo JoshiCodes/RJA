@@ -2,10 +2,10 @@ package de.joshicodes.rja.event.server;
 
 import com.google.gson.JsonObject;
 import de.joshicodes.rja.RJA;
-import de.joshicodes.rja.cache.Cache;
-import de.joshicodes.rja.cache.CacheMap;
 import de.joshicodes.rja.event.IncomingEvent;
 import de.joshicodes.rja.object.server.Server;
+
+import java.util.HashMap;
 
 public class ServerDeleteEvent extends IncomingEvent {
 
@@ -27,7 +27,7 @@ public class ServerDeleteEvent extends IncomingEvent {
     @Override
     public IncomingEvent handle(RJA rja, JsonObject object) {
         String id = object.get("id").getAsString();
-        CacheMap<String, Server> cache = rja.getServerCache();
+        HashMap<String, Server> cache = rja.getServerCache();
         if(cache != null)
             cache.remove(id);
         return new ServerDeleteEvent(rja, id);
