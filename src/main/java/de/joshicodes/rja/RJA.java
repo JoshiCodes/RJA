@@ -33,7 +33,9 @@ import de.joshicodes.rja.rest.SimpleRestAction;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -56,7 +58,7 @@ public abstract class RJA {
     private final CacheMap<String, Message> messageCache;
     private final CacheMap<String, Emoji> emojiCache;
     private final CacheMap<String, GenericChannel> channelCache;
-    private final CacheMap<String, Server> serverCache;
+    private final HashMap<String, Server> serverCache;
 
     private final FileHandler fileHandler;
 
@@ -80,7 +82,7 @@ public abstract class RJA {
 
         if(cachingPolicies.contains(CachingPolicy.SERVER)) {
             channelCache = new CacheMap<>();
-            serverCache = new CacheMap<>();
+            serverCache = new HashMap<>();
         } else {
             channelCache = null;
             serverCache = null;
@@ -116,18 +118,18 @@ public abstract class RJA {
      */
     public RestAction<Long> getPing(final int timeout) {
         return new SimpleRestAction<>(this, () -> {
-            long start = System.currentTimeMillis();
-            try {
-                InetAddress[] addresses = InetAddress.getAllByName(getApiUrl().replaceAll("https://", "").replaceAll("http://", ""));
-                for (InetAddress inetAddress : addresses) {
-                    if (inetAddress.isReachable(timeout)) {
-                        return System.currentTimeMillis() - start;
-                    }
-                }
-            } catch (IOException e) {
-                throw new RJAPingException("Cannot Ping Revolt REST-API", e);
+
+            final long start = System.currentTimeMillis();
+
+            // Any Open port on other machine
+            // openPort =  22 - ssh, 80 or 443 - webserver, 25 - mailserver etc.
+            try (Socket soc = new Socket()) {
+                soc.connect(new InetSocketAddress(getApiUrl().replaceAll("https://", "").replaceAll("http://", ""), 80), timeout);
+                return System.currentTimeMillis() - start;
+            } catch (IOException ex) {
+                throw new RJAPingException("Cannot Ping Revolt REST-API", ex);
             }
-            throw new RJAPingException("Cannot Ping Revolt REST-API");
+
         });
     }
 
@@ -265,6 +267,7 @@ public abstract class RJA {
     }
 
     public void cacheMessage(Message message) {
+        if(message == null) return;
         if(messageCache == null) return; // Caching is disabled
         messageCache.put(message.getId(), message);
     }
@@ -276,6 +279,7 @@ public abstract class RJA {
     }
 
     public User cacheUser(JsonObject user) {
+        if(user == null) return null;
         User u = User.from(this, user);
         if(userCache == null) return u; // Caching is disabled
         if(u != null) {
@@ -358,7 +362,7 @@ public abstract class RJA {
         return channelCache;
     }
 
-    public CacheMap<String, Server> getServerCache() {
+    public HashMap<String, Server> getServerCache() {
         return serverCache;
     }
 

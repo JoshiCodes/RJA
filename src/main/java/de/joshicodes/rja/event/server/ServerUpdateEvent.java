@@ -27,7 +27,7 @@ public class ServerUpdateEvent extends IncomingEvent {
             FetchServerRequest request = new FetchServerRequest(id);
             RestResponse<Server> response = rja.getRequestHandler().fetchRequest(rja, request);
             if(response.isOk()) {
-                Server server = response.object();
+                Server server = rja.cacheServer(response.object());
                 return new ServerUpdateEvent(rja, server);
             }
         }

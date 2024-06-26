@@ -11,6 +11,8 @@ import de.joshicodes.rja.event.message.reaction.MessageUnreactEvent;
 import de.joshicodes.rja.event.self.ReadyEvent;
 import de.joshicodes.rja.event.server.ServerCreateEvent;
 import de.joshicodes.rja.event.server.ServerDeleteEvent;
+import de.joshicodes.rja.event.server.ServerRoleUpdateEvent;
+import de.joshicodes.rja.event.server.ServerUpdateEvent;
 import de.joshicodes.rja.object.enums.CachingPolicy;
 import de.joshicodes.rja.object.user.UserStatus;
 import de.joshicodes.rja.requests.RequestHandler;
@@ -241,7 +243,9 @@ public class RJABuilder {
 
                 // Server
                 new ServerCreateEvent(),
-                new ServerDeleteEvent()
+                new ServerDeleteEvent(),
+                new ServerUpdateEvent(),
+                new ServerRoleUpdateEvent()
 
         );
 
