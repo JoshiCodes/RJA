@@ -45,15 +45,17 @@ public class MessageReceivedEvent extends IncomingEvent {
     }
 
     public boolean isFromServer() {
-        return channel == null || message.getChannel().complete() instanceof ServerChannel;
+        return getServer() != null;
     }
 
     @Nullable
     public Server getServer() {
-        if(!isFromServer()) {
+        if(message == null || message.getChannel().complete() == null)
             return null;
+        if(message.getChannel().complete() instanceof ServerChannel sc) {
+            return sc.getServer().complete();
         }
-        return ((ServerChannel) message.getChannel().complete()).getServer().complete();
+        return null;
     }
 
     @Override

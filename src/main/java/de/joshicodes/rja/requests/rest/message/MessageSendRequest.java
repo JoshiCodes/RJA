@@ -17,6 +17,7 @@ public class MessageSendRequest extends RestRequest<Message> {
         if(!data.isJsonObject())
             return null;
         Message m = Message.from(rja, data.getAsJsonObject(), null);
+        if(m == null) return null;
         rja.cacheMessage(m);
         if(rja.getChannelCache().containsKey(m.getChannelId())) {
             if(rja.getChannelCache().get(m.getChannelId()) instanceof TextChannel tc) {
