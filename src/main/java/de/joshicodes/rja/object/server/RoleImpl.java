@@ -17,8 +17,8 @@ public class RoleImpl extends Role {
     private boolean hoisted;
     private int rank;
 
-    private List<Permission> allowedPerms;
-    private List<Permission> deniedPerms;
+    private final List<Permission> allowedPerms;
+    private final List<Permission> deniedPerms;
 
     private String rawColor;
 
@@ -51,18 +51,50 @@ public class RoleImpl extends Role {
 
     }
 
+    public void update(JsonObject partial) {
+        if(partial == null) return;
+        if(partial.has("name")) {
+            name = partial.get("name").getAsString();
+        }
+        if(partial.has("hoist")) {
+            hoisted = partial.get("hoist").getAsBoolean();
+        }
+        if(partial.has("rank")) {
+            rank = partial.get("rank").getAsInt();
+        }
+        if(partial.has("permissions")) {
+            JsonObject permsObject = partial.getAsJsonObject("permissions");
+            long allowed = -1;
+            long denied = -1;
+            if(permsObject.has("a")) {
+                allowed = permsObject.get("a").getAsLong();
+            }
+            if(permsObject.has("d")) {
+                denied = permsObject.get("a").getAsLong();
+            }
+            updatePermissions(allowed, denied);
+        }
+        if(partial.has("colour")) {
+            rawColor = partial.get("colour").getAsString();
+        }
+    }
+
     void updatePermissions(long allowed, long denied) {
         if(allowed != -1) {
             for(Permission perm : Permission.values()) {
                 if(Permission.contains(allowed, perm)) {
-                    allowedPerms.add(perm);
+                    if(!allowedPerms.contains(perm)) allowedPerms.add(perm);
+                } else {
+                    allowedPerms.remove(perm);
                 }
             }
         }
         if(denied != -1) {
             for(Permission perm : Permission.values()) {
                 if(Permission.contains(denied, perm)) {
-                    deniedPerms.add(perm);
+                    if(!deniedPerms.contains(perm)) deniedPerms.add(perm);
+                } else {
+                    deniedPerms.remove(perm);
                 }
             }
         }

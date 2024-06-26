@@ -163,6 +163,12 @@ public class Server {
         return roles.stream().filter(r -> r.getId().equals(roleId)).findFirst().orElse(null);
     }
 
+    public void updateRole(RoleImpl impl) {
+        if(impl == null) return;
+        this.roles.removeIf(r -> r.getId().equals(impl.getId()));
+        this.roles.add(impl);
+    }
+
     public static class Icon {
 
         private final RJA rja;
