@@ -1,3 +1,8 @@
+> [!Warning]
+> 
+> I do no longer use Revolt. This API *should* still work, but I will no longer maintain it.
+> For now, this repository will be archived.
+
 # RJA (Revolt Java API)
 ### RJA is a Java API for the Revolt chat platform, mostly focused on bots.
 ![Github Release](https://img.shields.io/github/v/release/JoshiCodes/RJA?include_prereleases)
